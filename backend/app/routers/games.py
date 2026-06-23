@@ -16,6 +16,15 @@ async def list_games(db: AsyncSession = Depends(get_db)):
     return result.scalars().all()
 
 
+@router.get("/mine", response_model=list[GameOut])
+async def list_my_games(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(select(Game).where(Game.creator_id == current_user.id))
+    return result.scalars().all()
+
+
 @router.post("", response_model=GameOut, status_code=201)
 async def create_game(
     body: GameCreate,
