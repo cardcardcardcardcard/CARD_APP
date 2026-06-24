@@ -11,6 +11,7 @@ interface UseBattleReturn {
   winner: string | null;
   error: string | null;
   connected: boolean;
+  sendPlayCard: (cardId: string) => void;
   sendAttack: (value: number, cardId?: string) => void;
   sendEndTurn: () => void;
 }
@@ -57,6 +58,10 @@ export function useBattle(battleId: string, token: string): UseBattleReturn {
     }
   }, []);
 
+  const sendPlayCard = useCallback((cardId: string) => {
+    send({ action: 'play_card', card_id: cardId });
+  }, [send]);
+
   const sendAttack = useCallback((value: number, cardId?: string) => {
     send({ action: 'attack', value, card_id: cardId ?? null });
   }, [send]);
@@ -65,5 +70,5 @@ export function useBattle(battleId: string, token: string): UseBattleReturn {
     send({ action: 'end_turn' });
   }, [send]);
 
-  return { state, swapped, winner, error, connected, sendAttack, sendEndTurn };
+  return { state, swapped, winner, error, connected, sendPlayCard, sendAttack, sendEndTurn };
 }
