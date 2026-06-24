@@ -63,7 +63,7 @@ export default function CreateDeck() {
     setSaving(true);
     try {
       await createDeck(gameId, { name: name.trim(), card_ids: selected });
-      router.back();
+      router.replace('/(tabs)/my-decks');
     } catch (e: any) {
       Alert.alert('오류', e?.response?.data?.detail ?? '덱 생성 실패');
     } finally {
@@ -86,7 +86,11 @@ export default function CreateDeck() {
 
   return (
     <>
-      <Stack.Screen options={{ title: '덱 빌드' }} />
+      <Stack.Screen options={{ title: '덱 빌드', headerLeft: () => (
+        <TouchableOpacity onPress={() => router.replace('/(tabs)/my-decks')} style={{ padding: 8 }}>
+          <Ionicons name="arrow-back" size={22} color="#111827" />
+        </TouchableOpacity>
+      ) }} />
       <ScreenContainer>
         <View style={styles.header}>
           <Input label="덱 이름" value={name} onChangeText={setName} style={{ flex: 1, marginBottom: 0 }} />
