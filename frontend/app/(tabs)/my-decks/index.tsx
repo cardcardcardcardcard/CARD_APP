@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,25 +16,30 @@ export default function MyDecks() {
   const [data, setData] = useState<GameWithDecks[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const games = await listPublicGames();
-      const all = await Promise.all(
-        games.map(async g => {
-          const [decks, activeDeckId] = await Promise.all([
-            listMyDecks(g.id),
-            getActiveDeckId(g.id),
-          ]);
-          return { game: g, decks, activeDeckId };
-        })
-      );
-      setData(all);
-    } catch { Alert.alert('오류', '덱 로드 실패'); }
-    setLoading(false);
-  }, []);
-
-  useFocusEffect(load);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      const run = async () => {
+        setLoading(true);
+        try {
+          const games = await listPublicGames();
+          const all = await Promise.all(
+            games.map(async g => {
+              const [decks, activeDeckId] = await Promise.all([
+                listMyDecks(g.id),
+                getActiveDeckId(g.id),
+              ]);
+              return { game: g, decks, activeDeckId };
+            })
+          );
+          if (!cancelled) setData(all);
+        } catch { Alert.alert('오류', '덱 로드 실패'); }
+        if (!cancelled) setLoading(false);
+      };
+      run();
+      return () => { cancelled = true; };
+    }, [])
+  );
 
   const handleSelectSlot = async (gameId: string, deck: DeckOut | null, slotIdx: number) => {
     if (!deck) {
