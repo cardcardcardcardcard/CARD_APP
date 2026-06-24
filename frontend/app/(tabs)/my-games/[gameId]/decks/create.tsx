@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { listCards, getGame, createDeck } from '../../../../../lib/api';
@@ -18,6 +18,7 @@ export default function CreateDeck() {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     Promise.all([listCards(gameId), getGame(gameId)])
@@ -41,20 +42,16 @@ export default function CreateDeck() {
   };
 
   const save = async () => {
-    if (!name.trim()) { Alert.alert('오류', '덱 이름을 입력해주세요'); return; }
-    if (selected.length === 0) {
-      Alert.alert('오류', '카드를 최소 1장 선택해주세요'); return;
-    }
-    if (selected.length > deckSize) {
-      Alert.alert('오류', `덱은 최대 ${deckSize}장까지 가능합니다 (현재 ${selected.length}장)`);
-      return;
-    }
+    setError('');
+    if (!name.trim()) { setError('덱 이름을 입력해주세요'); return; }
+    if (selected.length === 0) { setError('카드를 최소 1장 선택해주세요'); return; }
+    if (selected.length > deckSize) { setError(`최대 ${deckSize}장까지 가능합니다`); return; }
     setSaving(true);
     try {
       await createDeck(gameId, { name: name.trim(), card_ids: selected });
       router.replace('/(tabs)/my-decks');
     } catch (e: any) {
-      Alert.alert('오류', e?.response?.data?.detail ?? '덱 생성 실패');
+      setError(e?.response?.data?.detail ?? '덱 생성 실패');
     } finally {
       setSaving(false);
     }
@@ -98,6 +95,7 @@ export default function CreateDeck() {
           ListEmptyComponent={<EmptyState message="이 게임에 카드가 없습니다." />}
         />
         <View style={styles.footer}>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
           <Button title={`덱 저장 (${selected.length}/${deckSize})`} onPress={save} loading={saving} />
         </View>
       </ScreenContainer>
@@ -114,4 +112,5 @@ const styles = StyleSheet.create({
   counter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   countNum: { fontSize: 16, fontWeight: '700', color: '#111827', minWidth: 20, textAlign: 'center' },
   footer: { padding: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  errorText: { color: '#ef4444', fontSize: 13, marginBottom: 8, textAlign: 'center' },
 });

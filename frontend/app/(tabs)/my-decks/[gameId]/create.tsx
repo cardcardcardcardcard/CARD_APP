@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, router, Stack, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { listCards, getGame, createDeck } from '../../../../lib/api';
+import { useAuthStore } from '../../../../store/auth';
 import { Input } from '../../../../components/ui/Input';
 import { Button } from '../../../../components/ui/Button';
 import { ScreenContainer } from '../../../../components/ui/ScreenContainer';
@@ -11,12 +12,14 @@ import type { CardOut, GameOut } from '../../../../types/api';
 
 export default function CreateDeck() {
   const { gameId } = useLocalSearchParams<{ gameId: string }>();
+  const user = useAuthStore(s => s.user);
   const [cards, setCards] = useState<CardOut[]>([]);
   const [game, setGame] = useState<GameOut | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   // useFocusEffect so card list refreshes after returning from card creation
   useFocusEffect(
@@ -38,6 +41,7 @@ export default function CreateDeck() {
 
   if (loading) return <LoadingView />;
   const deckSize = game?.ruleset.deck_size ?? 20;
+  const isOwner = game?.creator_id === user?.id;
 
   const addCard = (id: string) => {
     if (selected.length < deckSize) setSelected(s => [...s, id]);
@@ -52,20 +56,16 @@ export default function CreateDeck() {
   };
 
   const save = async () => {
-    if (!name.trim()) { Alert.alert('오류', '덱 이름을 입력해주세요'); return; }
-    if (selected.length === 0) {
-      Alert.alert('오류', '카드를 최소 1장 선택해주세요'); return;
-    }
-    if (selected.length > deckSize) {
-      Alert.alert('오류', `정확히 ${deckSize}장을 선택해주세요 (현재 ${selected.length}장)`);
-      return;
-    }
+    setError('');
+    if (!name.trim()) { setError('덱 이름을 입력해주세요'); return; }
+    if (selected.length === 0) { setError('카드를 최소 1장 선택해주세요'); return; }
+    if (selected.length > deckSize) { setError(`최대 ${deckSize}장까지 가능합니다`); return; }
     setSaving(true);
     try {
       await createDeck(gameId, { name: name.trim(), card_ids: selected });
       router.replace('/(tabs)/my-decks');
     } catch (e: any) {
-      Alert.alert('오류', e?.response?.data?.detail ?? '덱 생성 실패');
+      setError(e?.response?.data?.detail ?? '덱 생성 실패');
     } finally {
       setSaving(false);
     }
@@ -74,13 +74,15 @@ export default function CreateDeck() {
   const ListEmpty = (
     <View style={styles.emptyWrap}>
       <Text style={styles.emptyText}>카드가 없습니다.</Text>
-      <TouchableOpacity
-        style={styles.addCardBtn}
-        onPress={() => router.push(`/(tabs)/my-decks/${gameId}/cards/create`)}
-      >
-        <Ionicons name="add-circle-outline" size={20} color="#6366f1" />
-        <Text style={styles.addCardText}>첫 번째 카드 만들기</Text>
-      </TouchableOpacity>
+      {isOwner && (
+        <TouchableOpacity
+          style={styles.addCardBtn}
+          onPress={() => router.push(`/(tabs)/my-decks/${gameId}/cards/create`)}
+        >
+          <Ionicons name="add-circle-outline" size={20} color="#6366f1" />
+          <Text style={styles.addCardText}>첫 번째 카드 만들기</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -101,7 +103,7 @@ export default function CreateDeck() {
           keyExtractor={c => c.id}
           ListEmptyComponent={ListEmpty}
           ListFooterComponent={
-            cards.length > 0 ? (
+            cards.length > 0 && isOwner ? (
               <TouchableOpacity
                 style={styles.addCardRow}
                 onPress={() => router.push(`/(tabs)/my-decks/${gameId}/cards/create`)}
@@ -133,6 +135,7 @@ export default function CreateDeck() {
           }}
         />
         <View style={styles.footer}>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
           <Button title={`덱 저장 (${selected.length}/${deckSize})`} onPress={save} loading={saving} />
         </View>
       </ScreenContainer>
@@ -149,6 +152,7 @@ const styles = StyleSheet.create({
   counter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   countNum: { fontSize: 16, fontWeight: '700', color: '#111827', minWidth: 20, textAlign: 'center' },
   footer: { padding: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  errorText: { color: '#ef4444', fontSize: 13, marginBottom: 8, textAlign: 'center' },
   emptyWrap: { alignItems: 'center', paddingVertical: 48, gap: 12 },
   emptyText: { fontSize: 14, color: '#9ca3af' },
   addCardBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#eef2ff', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10 },
