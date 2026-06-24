@@ -118,9 +118,36 @@ async def battle_ws(
                     await ws.send_text(json.dumps({"type": "error", "detail": "Card not in hand"}))
                     continue
                 hand.remove(card_id)
-                effects = await svc.get_card_effects(uuid.UUID(card_id))
+                card = await svc.get_card(uuid.UUID(card_id))
+                effects = card.effects if card else []
                 if effects:
                     run_effects(effects, trigger="on_play", state=state, actor=actor)
+
+                def _summarize(fx: list) -> list[str]:
+                    labels = {
+                        "deal_damage": lambda a: f"{a.get('value', 0)} 피해",
+                        "heal": lambda a: f"{a.get('value', 0)} 회복",
+                        "draw_card": lambda a: f"카드 {a.get('value', 1)}장 드로우",
+                        "buff_stat": lambda a: f"{a.get('stat', '')} +{a.get('value', 0)}",
+                        "debuff_stat": lambda a: f"{a.get('stat', '')} -{a.get('value', 0)}",
+                        "skip_turn": lambda _: "턴 스킵",
+                    }
+                    result = []
+                    for ef in fx:
+                        for act in ef.get("actions", []):
+                            fn = labels.get(act.get("type", ""))
+                            if fn:
+                                result.append(fn(act))
+                    return result
+
+                await manager.broadcast(str(battle_id), {
+                    "type": "card_played",
+                    "data": {
+                        "actor": actor,
+                        "card_name": card.name if card else "???",
+                        "effects_summary": _summarize(effects),
+                    },
+                })
                 if await _finish_turn():
                     break
 

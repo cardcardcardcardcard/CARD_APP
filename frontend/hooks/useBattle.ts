@@ -5,16 +5,26 @@ import type { BattleState, WsMessage } from '../types/api';
 
 const WS_BASE = API_BASE.replace('http', 'ws');
 
+export interface ActionLogEntry {
+  actor: 'a' | 'b';
+  cardName: string;
+  effectsSummary: string[];
+  id: number;
+}
+
 interface UseBattleReturn {
   state: BattleState | null;
   swapped: boolean;
   winner: string | null;
   error: string | null;
   connected: boolean;
+  actionLog: ActionLogEntry[];
   sendPlayCard: (cardId: string) => void;
   sendAttack: (value: number, cardId?: string) => void;
   sendEndTurn: () => void;
 }
+
+let _logId = 0;
 
 export function useBattle(battleId: string, token: string): UseBattleReturn {
   const ws = useRef<WebSocket | null>(null);
@@ -23,6 +33,7 @@ export function useBattle(battleId: string, token: string): UseBattleReturn {
   const [winner, setWinner] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
+  const [actionLog, setActionLog] = useState<ActionLogEntry[]>([]);
 
   useEffect(() => {
     const socket = new WebSocket(`${WS_BASE}/battles/${battleId}/ws?token=${token}`);
@@ -45,6 +56,12 @@ export function useBattle(battleId: string, token: string): UseBattleReturn {
           setWinner((msg.data as any).winner as string);
         } else if (msg.type === 'error') {
           setError((msg.data as any).detail as string);
+        } else if (msg.type === 'card_played') {
+          const d = msg.data as any;
+          setActionLog(prev => [
+            { actor: d.actor, cardName: d.card_name, effectsSummary: d.effects_summary ?? [], id: ++_logId },
+            ...prev.slice(0, 9),
+          ]);
         }
       } catch {}
     };
@@ -70,5 +87,5 @@ export function useBattle(battleId: string, token: string): UseBattleReturn {
     send({ action: 'end_turn' });
   }, [send]);
 
-  return { state, swapped, winner, error, connected, sendPlayCard, sendAttack, sendEndTurn };
+  return { state, swapped, winner, error, connected, actionLog, sendPlayCard, sendAttack, sendEndTurn };
 }
