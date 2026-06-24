@@ -24,9 +24,10 @@ async def create_deck(
         raise HTTPException(status_code=404, detail="Game not found")
 
     deck_size = game.ruleset.get("deck_size", 20)
-    if len(body.card_ids) != deck_size:
-        raise HTTPException(status_code=422, detail=f"덱은 정확히 {deck_size}장이어야 합니다")
-    # 중복 card_id 허용 (같은 카드 여러 장 가능)
+    if len(body.card_ids) == 0:
+        raise HTTPException(status_code=422, detail="카드를 최소 1장 선택해주세요")
+    if len(body.card_ids) > deck_size:
+        raise HTTPException(status_code=422, detail=f"덱은 최대 {deck_size}장까지 가능합니다")
 
     deck = Deck(
         id=uuid.uuid4(),

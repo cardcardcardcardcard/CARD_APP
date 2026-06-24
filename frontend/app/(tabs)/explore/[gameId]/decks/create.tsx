@@ -42,8 +42,11 @@ export default function CreateDeckFromExplore() {
 
   const save = async () => {
     if (!name.trim()) { Alert.alert('오류', '덱 이름을 입력해주세요'); return; }
-    if (selected.length !== deckSize) {
-      Alert.alert('오류', `정확히 ${deckSize}장을 선택해주세요 (현재 ${selected.length}장)`);
+    if (selected.length === 0) {
+      Alert.alert('오류', '카드를 최소 1장 선택해주세요'); return;
+    }
+    if (selected.length > deckSize) {
+      Alert.alert('오류', `덱은 최대 ${deckSize}장까지 가능합니다 (현재 ${selected.length}장)`);
       return;
     }
     setSaving(true);
