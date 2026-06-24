@@ -9,6 +9,32 @@ const OPS = ['<', '>', '<=', '>=', '==', '!='];
 const ACTION_TYPES = ['deal_damage', 'heal', 'buff_stat', 'debuff_stat', 'draw_card', 'discard_card', 'skip_turn'];
 const TARGETS = ['opponent', 'self'];
 
+const LABEL: Record<string, string> = {
+  // triggers
+  on_attack: '공격 시',
+  on_defend: '방어 시',
+  on_play: '카드 사용 시',
+  on_turn_start: '턴 시작 시',
+  on_turn_end: '턴 종료 시',
+  on_swap: '덱 교체 시',
+  // stats
+  'self.hp': '내 HP',
+  'self.resources': '내 자원',
+  'opponent.hp': '상대 HP',
+  'opponent.resources': '상대 자원',
+  // action types
+  deal_damage: '피해 입히기',
+  heal: '회복',
+  buff_stat: '강화',
+  debuff_stat: '약화',
+  draw_card: '카드 뽑기',
+  discard_card: '카드 버리기',
+  skip_turn: '턴 건너뛰기',
+  // targets
+  opponent: '상대',
+  self: '자신',
+};
+
 interface Props {
   effects: CardEffect[];
   onChange: (effects: CardEffect[]) => void;
@@ -23,7 +49,7 @@ function Picker({ value, options, onChange }: { value: string; options: string[]
           style={[styles.chip, value === o && styles.chipActive]}
           onPress={() => onChange(o)}
         >
-          <Text style={[styles.chipText, value === o && styles.chipTextActive]}>{o}</Text>
+          <Text style={[styles.chipText, value === o && styles.chipTextActive]}>{LABEL[o] ?? o}</Text>
         </TouchableOpacity>
       ))}
     </ScrollView>
