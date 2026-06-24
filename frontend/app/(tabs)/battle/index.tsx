@@ -87,7 +87,17 @@ export default function BattleLobby() {
                   style={styles.item}
                 />
               ))}
-              {decks.length === 0 && <Text style={styles.empty}>이 게임에 덱이 없습니다. 먼저 덱을 만드세요.</Text>}
+              {decks.length === 0 && (
+                <View style={styles.noDecks}>
+                  <Text style={styles.empty}>이 게임에 덱이 없습니다.</Text>
+                  <Button
+                    title="탐색 탭에서 덱 만들기"
+                    onPress={() => router.push(`/(tabs)/explore/${selectedGame?.id}`)}
+                    variant="secondary"
+                    style={{ marginTop: 8 }}
+                  />
+                </View>
+              )}
               {selectedDeck && (
                 <>
                   <Button title="배틀 방 만들기" onPress={createLobby} loading={loading} style={{ marginTop: 16 }} />
@@ -121,6 +131,7 @@ const styles = StyleSheet.create({
   sub: { fontSize: 13, color: '#6b7280', marginBottom: 12 },
   item: { marginBottom: 8 },
   empty: { textAlign: 'center', color: '#9ca3af', marginTop: 24 },
+  noDecks: { alignItems: 'center', marginTop: 24 },
   orText: { textAlign: 'center', color: '#9ca3af', marginVertical: 12 },
   battleId: { fontSize: 18, fontWeight: '700', color: '#6366f1', textAlign: 'center', padding: 16, backgroundColor: '#eef2ff', borderRadius: 8, marginTop: 8 },
 });

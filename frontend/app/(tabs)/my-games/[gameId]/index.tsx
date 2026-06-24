@@ -39,11 +39,6 @@ export default function GameOverview() {
               label="카드 관리"
               onPress={() => router.push(`/(tabs)/my-games/${gameId}/cards`)}
             />
-            <ActionRow
-              icon="layers-outline"
-              label="내 덱"
-              onPress={() => router.push(`/(tabs)/my-games/${gameId}/decks`)}
-            />
           </View>
         </ScrollView>
       </ScreenContainer>
