@@ -36,7 +36,7 @@ export default function Register() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>CardCard</Text>
-        <Text style={styles.subtitle}>계정을 만드세요</Text>
+        <Text style={styles.subtitle}>커스텀 카드 게임</Text>
         <Input label="사용자 이름" value={username} onChangeText={setUsername} autoCapitalize="none" />
         <Input label="이메일" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
         <Input label="비밀번호" value={password} onChangeText={setPassword} secureTextEntry />

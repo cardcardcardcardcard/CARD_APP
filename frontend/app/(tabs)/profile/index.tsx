@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, Alert } from 'react-native';
-import { router } from 'expo-router';
+import { Text, StyleSheet } from 'react-native';
+import { router, Stack } from 'expo-router';
 import { useAuthStore } from '../../../store/auth';
 import { Button } from '../../../components/ui/Button';
 import { ScreenContainer } from '../../../components/ui/ScreenContainer';
@@ -13,22 +13,23 @@ export default function Profile() {
   };
 
   return (
-    <ScreenContainer style={styles.container}>
-      <Text style={styles.heading}>프로필</Text>
-      {user && (
-        <>
-          <Text style={styles.name}>{user.username}</Text>
-          <Text style={styles.email}>{user.email}</Text>
-        </>
-      )}
-      <Button title="로그아웃" onPress={logout} variant="danger" style={{ marginTop: 24 }} />
-    </ScreenContainer>
+    <>
+      <Stack.Screen options={{ title: '프로필' }} />
+      <ScreenContainer style={styles.container}>
+        {user && (
+          <>
+            <Text style={styles.name}>{user.username}</Text>
+            <Text style={styles.email}>{user.email}</Text>
+          </>
+        )}
+        <Button title="로그아웃" onPress={logout} variant="danger" style={{ marginTop: 24 }} />
+      </ScreenContainer>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: { padding: 24 },
-  heading: { fontSize: 24, fontWeight: '700', color: '#111827', marginBottom: 16 },
   name: { fontSize: 18, fontWeight: '600', color: '#374151' },
   email: { fontSize: 14, color: '#6b7280', marginTop: 4 },
 });

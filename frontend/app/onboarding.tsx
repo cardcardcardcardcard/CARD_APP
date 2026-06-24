@@ -8,17 +8,17 @@ const STEPS = [
   {
     icon: 'game-controller-outline' as const,
     title: '카드카드에 오신 걸 환영합니다',
-    desc: '나만의 카드 게임을 만들거나\n다른 사람의 게임에 참여하세요.',
+    desc: '말로 하는 파티 게임을\n카드로 즐겨보세요.',
   },
   {
-    icon: 'layers-outline' as const,
-    title: '덱을 먼저 만드세요',
-    desc: '"내 덱" 탭에서 게임별 덱을 만드세요.\n배틀 참가 시 덱이 필요합니다.',
+    icon: 'albums-outline' as const,
+    title: '손에 카드가 모이면 승리!',
+    desc: '행동·카운터·함정 카드를 내며 진행해요.\n내 차례가 시작될 때 손에 카드가 10장이면 승리!\n함정에 걸리면 카드를 잃으니 조심하세요.',
   },
   {
     icon: 'flash-outline' as const,
-    title: '배틀 시작',
-    desc: '"배틀" 탭에서 방을 만들거나\nID로 친구 방에 참가하세요.',
+    title: '배틀 시작하기',
+    desc: '"배틀" 탭에서 방을 만들고\nID를 친구에게 공유하세요.\n2명이든 여러 명이든, 모이면 방장이 시작합니다.',
   },
 ];
 
