@@ -25,11 +25,22 @@ export default function CreateDeck() {
       .finally(() => setLoading(false));
   }, [gameId]);
 
-  const toggle = (id: string) =>
-    setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
+  if (loading) return <LoadingView />;
+  const deckSize = game?.ruleset.deck_size ?? 20;
+
+  const addCard = (id: string) => {
+    if (selected.length < deckSize) setSelected(s => [...s, id]);
+  };
+
+  const removeCard = (id: string) => {
+    setSelected(s => {
+      const idx = s.lastIndexOf(id);
+      if (idx === -1) return s;
+      return [...s.slice(0, idx), ...s.slice(idx + 1)];
+    });
+  };
 
   const save = async () => {
-    const deckSize = game?.ruleset.deck_size ?? 20;
     if (!name.trim()) { Alert.alert('오류', '덱 이름을 입력해주세요'); return; }
     if (selected.length !== deckSize) {
       Alert.alert('오류', `정확히 ${deckSize}장을 선택해주세요 (현재 ${selected.length}장)`);
@@ -46,9 +57,6 @@ export default function CreateDeck() {
     }
   };
 
-  if (loading) return <LoadingView />;
-  const deckSize = game?.ruleset.deck_size ?? 20;
-
   return (
     <>
       <Stack.Screen options={{ title: '덱 빌드' }} />
@@ -61,13 +69,23 @@ export default function CreateDeck() {
           data={cards}
           keyExtractor={c => c.id}
           renderItem={({ item }) => {
-            const active = selected.includes(item.id);
+            const count = selected.filter(id => id === item.id).length;
             return (
-              <TouchableOpacity style={[styles.card, active && styles.cardActive]} onPress={() => toggle(item.id)}>
-                <Text style={[styles.name, active && styles.nameActive]}>{item.name}</Text>
-                <Text style={styles.meta}>{item.effects.length} 효과</Text>
-                {active && <Ionicons name="checkmark-circle" size={20} color="#6366f1" style={styles.check} />}
-              </TouchableOpacity>
+              <View style={styles.card}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.name}>{item.name}</Text>
+                  <Text style={styles.meta}>{item.effects.length} 효과</Text>
+                </View>
+                <View style={styles.counter}>
+                  <TouchableOpacity onPress={() => removeCard(item.id)} disabled={count === 0}>
+                    <Ionicons name="remove-circle-outline" size={24} color={count === 0 ? '#d1d5db' : '#ef4444'} />
+                  </TouchableOpacity>
+                  <Text style={styles.countNum}>{count}</Text>
+                  <TouchableOpacity onPress={() => addCard(item.id)} disabled={selected.length >= deckSize}>
+                    <Ionicons name="add-circle-outline" size={24} color={selected.length >= deckSize ? '#d1d5db' : '#6366f1'} />
+                  </TouchableOpacity>
+                </View>
+              </View>
             );
           }}
           ListEmptyComponent={<EmptyState message="이 게임에 카드가 없습니다." />}
@@ -84,10 +102,9 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
   count: { fontSize: 16, fontWeight: '700', color: '#6366f1', paddingBottom: 8 },
   card: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  cardActive: { backgroundColor: '#eef2ff' },
-  name: { flex: 1, fontSize: 15, fontWeight: '500', color: '#111827' },
-  nameActive: { color: '#6366f1' },
-  meta: { fontSize: 12, color: '#9ca3af', marginRight: 8 },
-  check: {},
+  name: { fontSize: 15, fontWeight: '500', color: '#111827' },
+  meta: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  counter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  countNum: { fontSize: 16, fontWeight: '700', color: '#111827', minWidth: 20, textAlign: 'center' },
   footer: { padding: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
 });

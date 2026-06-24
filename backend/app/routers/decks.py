@@ -25,7 +25,8 @@ async def create_deck(
 
     deck_size = game.ruleset.get("deck_size", 20)
     if len(body.card_ids) != deck_size:
-        raise HTTPException(status_code=422, detail=f"Deck must have exactly {deck_size} cards")
+        raise HTTPException(status_code=422, detail=f"덱은 정확히 {deck_size}장이어야 합니다")
+    # 중복 card_id 허용 (같은 카드 여러 장 가능)
 
     deck = Deck(
         id=uuid.uuid4(),
