@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ActivityIndicator, ScrollView,
-  TouchableOpacity, FlatList, Animated,
+  TouchableOpacity, FlatList, Animated, Dimensions,
 } from 'react-native';
+
+const { width: SCREEN_W } = Dimensions.get('window');
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useAuthStore } from '../../../store/auth';
 import { useBattle } from '../../../hooks/useBattle';
@@ -29,6 +31,52 @@ function getCardVisual(effects: any[]): { icon: string; color: string; bg: strin
     }
   }
   return { icon: '🂠', color: '#64748b', bg: '#0f172a', summary: '효과 없음' };
+}
+
+// ── OpponentPlayNotification ──────────────────────────────────────────────
+interface OpponentNotif {
+  cardName: string;
+  effectsSummary: string[];
+  icon: string;
+  color: string;
+}
+
+function OpponentPlayNotification({ notif }: { notif: OpponentNotif | null }) {
+  const slideY = useRef(new Animated.Value(-80)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!notif) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    slideY.setValue(-80);
+    opacity.setValue(0);
+    Animated.parallel([
+      Animated.spring(slideY, { toValue: 0, useNativeDriver: true, bounciness: 6 }),
+      Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start();
+    timerRef.current = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(slideY, { toValue: -80, duration: 300, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]).start();
+    }, 2400);
+  }, [notif]);
+
+  if (!notif) return null;
+
+  return (
+    <Animated.View style={[styles.opNotif, { opacity, transform: [{ translateY: slideY }] }]}>
+      <Text style={styles.opNotifIcon}>{notif.icon}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.opNotifTitle}>상대방이 카드 사용!</Text>
+        <Text style={[styles.opNotifCard, { color: notif.color }]}>{notif.cardName}</Text>
+        {notif.effectsSummary.length > 0 && (
+          <Text style={styles.opNotifEffect}>{notif.effectsSummary.join(' · ')}</Text>
+        )}
+      </View>
+    </Animated.View>
+  );
 }
 
 // ── FlipCard component ────────────────────────────────────────────────────
@@ -76,15 +124,32 @@ export default function BattleScreen() {
 
   const [actor, setActor] = useState<'a' | 'b' | null>(null);
   const [cardMap, setCardMap] = useState<Record<string, CardOut>>({});
+  const [opNotif, setOpNotif] = useState<OpponentNotif | null>(null);
+  const actorRef = useRef<'a' | 'b' | null>(null);
 
   useEffect(() => {
     getBattle(battleId).then(async (b: BattleOut) => {
       const role = b.player_a_id === user?.id ? 'a' : 'b';
       setActor(role);
+      actorRef.current = role;
       const cards = await listCards(b.game_id);
       setCardMap(Object.fromEntries(cards.map(c => [c.id, c])));
     });
   }, [battleId, user]);
+
+  // 상대 카드 제출 감지
+  useEffect(() => {
+    const latest = actionLog[0];
+    if (!latest || latest.actor === actorRef.current) return;
+    const summary = latest.effectsSummary[0] ?? '';
+    let icon = '🂠', color = '#94a3b8';
+    if (summary.includes('피해')) { icon = '⚔️'; color = '#fca5a5'; }
+    else if (summary.includes('회복')) { icon = '💚'; color = '#86efac'; }
+    else if (summary.includes('드로우')) { icon = '🃏'; color = '#93c5fd'; }
+    else if (summary.includes('버프')) { icon = '✨'; color = '#c4b5fd'; }
+    else if (summary.includes('디버프')) { icon = '🔻'; color = '#fdba74'; }
+    setOpNotif({ cardName: latest.cardName, effectsSummary: latest.effectsSummary, icon, color });
+  }, [actionLog]);
 
   if (!connected && !state) {
     return (
@@ -135,6 +200,8 @@ export default function BattleScreen() {
           <HpBar hp={opHp} maxHp={state.initial_hp} color="#ef4444" />
           <Text style={styles.subInfo}>덱 ({opDeckRemaining.length}) · 손패 {opHand.length}장</Text>
         </View>
+
+        <OpponentPlayNotification notif={opNotif} />
 
         {/* Action feed */}
         <View style={styles.feedArea}>
@@ -271,4 +338,28 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', padding: 10, borderTopWidth: 1, borderTopColor: '#1e293b' },
   waitText: { flex: 1, color: '#334155', textAlign: 'center', fontSize: 12, alignSelf: 'center' },
   errorText: { color: '#ef4444', textAlign: 'center', padding: 6, fontSize: 11 },
+  opNotif: {
+    position: 'absolute',
+    top: 0,
+    left: 16,
+    right: 16,
+    zIndex: 100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  opNotifIcon: { fontSize: 28 },
+  opNotifTitle: { fontSize: 10, color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2 },
+  opNotifCard: { fontSize: 16, fontWeight: '800' },
+  opNotifEffect: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
 });
