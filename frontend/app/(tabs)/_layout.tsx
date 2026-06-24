@@ -13,6 +13,14 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="my-decks"
+        options={{
+          title: '내 덱',
+          tabBarIcon: ({ color, size }) => <Ionicons name="layers-outline" size={size} color={color} />,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
         name="my-games"
         options={{
           title: '내 게임',

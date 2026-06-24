@@ -1,28 +1,22 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { getGame, listMyDecks } from '../../../lib/api';
+import { getGame } from '../../../lib/api';
 import { Button } from '../../../components/ui/Button';
 import { ScreenContainer } from '../../../components/ui/ScreenContainer';
 import { LoadingView } from '../../../components/ui/LoadingView';
-import type { GameOut, DeckOut } from '../../../types/api';
+import type { GameOut } from '../../../types/api';
 
 export default function GameDetail() {
   const { gameId } = useLocalSearchParams<{ gameId: string }>();
   const [game, setGame] = useState<GameOut | null>(null);
   const [loading, setLoading] = useState(true);
-  const [decks, setDecks] = useState<DeckOut[]>([]);
-  const [decksLoading, setDecksLoading] = useState(true);
 
   useEffect(() => {
     getGame(gameId)
-      .then(g => {
-        setGame(g);
-        return listMyDecks(gameId);
-      })
-      .then(setDecks)
+      .then(setGame)
       .catch(() => Alert.alert('오류', '게임을 찾을 수 없습니다'))
-      .finally(() => { setLoading(false); setDecksLoading(false); });
+      .finally(() => setLoading(false));
   }, [gameId]);
 
   if (loading) return <LoadingView />;
@@ -55,29 +49,6 @@ export default function GameDetail() {
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>내 덱</Text>
-          {decksLoading ? (
-            <ActivityIndicator color="#6366f1" style={{ marginVertical: 12 }} />
-          ) : (
-            <>
-              {decks.map(d => (
-                <View key={d.id} style={styles.deckRow}>
-                  <Text style={styles.deckName}>{d.name}</Text>
-                  <Text style={styles.deckMeta}>{d.card_ids.length}장</Text>
-                </View>
-              ))}
-              {decks.length === 0 && (
-                <Text style={styles.deckEmpty}>덱이 없습니다. 아래 버튼으로 만드세요.</Text>
-              )}
-              <Button
-                title="새 덱 만들기"
-                onPress={() => router.push(`/(tabs)/explore/${gameId}/decks/create`)}
-                variant="secondary"
-                style={{ marginHorizontal: 16, marginTop: 8 }}
-              />
-            </>
-          )}
-
           <Button
             title="배틀 참가하기"
             onPress={() => router.push(`/(tabs)/battle?game_id=${game.id}`)}
@@ -97,8 +68,4 @@ const styles = StyleSheet.create({
   ruleRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
   ruleKey: { fontSize: 13, color: '#6b7280' },
   ruleVal: { fontSize: 13, fontWeight: '500', color: '#111827' },
-  deckRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  deckName: { fontSize: 14, fontWeight: '500', color: '#111827' },
-  deckMeta: { fontSize: 12, color: '#6b7280' },
-  deckEmpty: { fontSize: 13, color: '#9ca3af', textAlign: 'center', paddingVertical: 12 },
 });
