@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
@@ -7,53 +7,57 @@ import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { ScreenContainer } from '../../../components/ui/ScreenContainer';
 import { LoadingView } from '../../../components/ui/LoadingView';
-import { listPublicGames, listMyDecks, getGame, createBattle, getBattle, joinBattle } from '../../../lib/api';
-import { getActiveDeckId } from '../../../lib/storage';
-import type { GameOut, DeckOut, BattleOut } from '../../../types/api';
+import { listPublicGames, createBattle, getBattle, joinBattle, startBattle } from '../../../lib/api';
+import { useAuthStore } from '../../../store/auth';
+import type { GameOut, BattleOut } from '../../../types/api';
 
-type Step = 'home' | 'pick_game' | 'pick_deck' | 'lobby';
-type Mode = 'create' | 'join';
+type Step = 'home' | 'pick_game' | 'lobby';
 
 export default function BattleLobby() {
   const { game_id } = useLocalSearchParams<{ game_id?: string }>();
+  const user = useAuthStore(s => s.user);
 
   const [step, setStep] = useState<Step>('home');
-  const [mode, setMode] = useState<Mode>('create');
   const [games, setGames] = useState<GameOut[]>([]);
-  const [selectedGame, setSelectedGame] = useState<GameOut | null>(null);
-  const [decks, setDecks] = useState<DeckOut[]>([]);
-  const [selectedDeck, setSelectedDeck] = useState<DeckOut | null>(null);
-  const [pendingBattle, setPendingBattle] = useState<BattleOut | null>(null);
-  const [battleId, setBattleId] = useState('');
+  const [battle, setBattle] = useState<BattleOut | null>(null);
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // game_id 파라미터로 진입 시 pick_deck 바로 이동
+  // game_id 파라미터로 진입 시 바로 방 생성
   useEffect(() => {
     if (!game_id) return;
-    setMode('create');
-    loadDecksForGame(game_id);
+    createLobbyForGame(game_id);
   }, [game_id]);
 
-  const loadDecksForGame = async (gid: string, targetGame?: GameOut) => {
-    setPageLoading(true);
+  // lobby 단계: 참가자 목록 + 시작 여부 폴링
+  useEffect(() => {
+    if (step !== 'lobby' || !battle) return;
+    pollRef.current = setInterval(async () => {
+      try {
+        const b = await getBattle(battle.id);
+        setBattle(b);
+        if (b.status === 'playing') {
+          if (pollRef.current) clearInterval(pollRef.current);
+          router.replace(`/(tabs)/battle/${b.id}`);
+        }
+      } catch {}
+    }, 2000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [step, battle?.id]);
+
+  const createLobbyForGame = async (gid: string) => {
     setError('');
+    setPageLoading(true);
     try {
-      const [fetchedDecks, activeDeckId, gameData] = await Promise.all([
-        listMyDecks(gid),
-        getActiveDeckId(gid),
-        targetGame ? Promise.resolve(targetGame) : getGame(gid),
-      ]);
-      setSelectedGame(gameData);
-      setDecks(fetchedDecks);
-      const active = fetchedDecks.find(d => d.id === activeDeckId) ?? fetchedDecks[0] ?? null;
-      setSelectedDeck(active);
-      setStep('pick_deck');
-    } catch {
-      setError('게임 정보를 불러올 수 없습니다');
+      const b = await createBattle({ game_id: gid });
+      setBattle(b);
+      setStep('lobby');
+    } catch (e: any) {
+      setError(e?.response?.data?.detail ?? '방 생성 실패');
     }
     setPageLoading(false);
   };
@@ -63,20 +67,32 @@ export default function BattleLobby() {
     setError('');
     setLoading(true);
     try {
-      const battle = await getBattle(joinCode.trim());
-      if (battle.status !== 'waiting') { setError('이미 시작된 배틀입니다'); setLoading(false); return; }
-      setPendingBattle(battle);
-      setMode('join');
-      await loadDecksForGame(battle.game_id);
+      const b = await getBattle(joinCode.trim());
+      if (b.status !== 'waiting') { setError('이미 시작된 배틀입니다'); setLoading(false); return; }
+      const joined = await joinBattle(b.id);
+      setBattle(joined);
+      setStep('lobby');
     } catch (e: any) {
       setError(e?.response?.data?.detail ?? '배틀을 찾을 수 없습니다');
     }
     setLoading(false);
   };
 
+  const handleStart = async () => {
+    if (!battle) return;
+    setError('');
+    setLoading(true);
+    try {
+      const started = await startBattle(battle.id);
+      router.replace(`/(tabs)/battle/${started.id}`);
+    } catch (e: any) {
+      setError(e?.response?.data?.detail ?? '시작 실패');
+    }
+    setLoading(false);
+  };
+
   const goPickGame = async () => {
     setError('');
-    setMode('create');
     if (games.length === 0) {
       setLoading(true);
       try { setGames(await listPublicGames()); } catch { setError('게임 목록 로드 실패'); }
@@ -85,42 +101,18 @@ export default function BattleLobby() {
     setStep('pick_game');
   };
 
-  const createLobby = async () => {
-    if (!selectedGame || !selectedDeck) return;
-    setError('');
-    setLoading(true);
-    try {
-      const battle = await createBattle({ game_id: selectedGame.id, deck_id: selectedDeck.id });
-      setBattleId(battle.id);
-      setStep('lobby');
-    } catch (e: any) {
-      setError(e?.response?.data?.detail ?? '방 생성 실패');
-    }
-    setLoading(false);
-  };
-
-  const confirmJoin = async () => {
-    if (!selectedDeck || !pendingBattle) return;
-    setError('');
-    setLoading(true);
-    try {
-      await joinBattle(pendingBattle.id, { deck_id: selectedDeck.id });
-      router.push(`/(tabs)/battle/${pendingBattle.id}`);
-    } catch (e: any) {
-      setError(e?.response?.data?.detail ?? '참가 실패');
-    }
-    setLoading(false);
-  };
-
   const copyBattleId = async () => {
-    await Clipboard.setStringAsync(battleId);
+    if (!battle) return;
+    await Clipboard.setStringAsync(battle.id);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const reset = () => { setStep('home'); setError(''); setSelectedGame(null); setSelectedDeck(null); setPendingBattle(null); };
+  const reset = () => { setStep('home'); setError(''); setBattle(null); };
 
   if (pageLoading) return <LoadingView />;
+
+  const isHost = !!battle && !!user && battle.players[0]?.user_id === user.id;
 
   return (
     <>
@@ -132,8 +124,8 @@ export default function BattleLobby() {
           {step === 'home' && (
             <>
               <Text style={styles.heading}>배틀 참가</Text>
-              <Text style={styles.label}>배틀 코드 입력</Text>
               <Input
+                label="배틀 코드 입력"
                 value={joinCode}
                 onChangeText={setJoinCode}
                 placeholder="배틀 ID를 붙여넣으세요"
@@ -154,7 +146,7 @@ export default function BattleLobby() {
             <>
               <Text style={styles.heading}>게임 선택</Text>
               {games.map(g => (
-                <Button key={g.id} title={g.title} onPress={() => loadDecksForGame(g.id, g)} variant="secondary" style={styles.item} />
+                <Button key={g.id} title={g.title} onPress={() => createLobbyForGame(g.id)} variant="secondary" style={styles.item} />
               ))}
               {games.length === 0 && <Text style={styles.empty}>공개 게임이 없습니다.</Text>}
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -162,59 +154,42 @@ export default function BattleLobby() {
             </>
           )}
 
-          {/* ── PICK DECK ── */}
-          {step === 'pick_deck' && (
-            <>
-              <Text style={styles.heading}>{mode === 'join' ? '참가할 덱 선택' : '덱 선택'}</Text>
-              <Text style={styles.sub}>게임: {selectedGame?.title}</Text>
-              {decks.map(d => (
-                <Button
-                  key={d.id}
-                  title={`${d.name} (${d.card_ids?.length ?? '?'}장)`}
-                  onPress={() => setSelectedDeck(d)}
-                  variant={selectedDeck?.id === d.id ? 'primary' : 'secondary'}
-                  style={styles.item}
-                />
-              ))}
-              {decks.length === 0 && (
-                <View style={styles.noDecks}>
-                  <Text style={styles.empty}>이 게임에 덱이 없습니다.</Text>
-                  <Button
-                    title="덱 만들기"
-                    onPress={() => router.push(`/(tabs)/my-decks/${selectedGame?.id}/create`)}
-                    variant="secondary"
-                    style={{ marginTop: 8 }}
-                  />
-                </View>
-              )}
-              {selectedDeck && (
-                <Button
-                  title={mode === 'join' ? '배틀 참가' : '배틀 방 만들기'}
-                  onPress={mode === 'join' ? confirmJoin : createLobby}
-                  loading={loading}
-                  style={{ marginTop: 16 }}
-                />
-              )}
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
-              <Button title="← 뒤로" onPress={reset} variant="secondary" style={{ marginTop: 8 }} />
-            </>
-          )}
-
           {/* ── LOBBY ── */}
-          {step === 'lobby' && (
+          {step === 'lobby' && battle && (
             <>
-              <Text style={styles.heading}>상대방 대기 중</Text>
-              <Text style={styles.sub}>배틀 ID를 상대방에게 공유하세요</Text>
+              <Text style={styles.heading}>{isHost ? '참가자 대기 중' : '방장이 시작하길 기다리는 중'}</Text>
+              <Text style={styles.sub}>배틀 ID를 다른 참가자에게 공유하세요</Text>
               <TouchableOpacity onPress={copyBattleId} style={styles.battleIdBox} activeOpacity={0.7}>
-                <Text style={styles.battleId}>{battleId}</Text>
+                <Text style={styles.battleId}>{battle.id}</Text>
                 <View style={styles.copyBtn}>
                   <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={18} color={copied ? '#22c55e' : '#6366f1'} />
                   <Text style={[styles.copyText, copied && styles.copyTextDone]}>{copied ? '복사됨' : '복사'}</Text>
                 </View>
               </TouchableOpacity>
+
+              <Text style={styles.playersLabel}>참가자 ({battle.players.length}명)</Text>
+              <View style={styles.playersList}>
+                {battle.players.map((p, i) => (
+                  <View key={p.user_id} style={styles.playerRow}>
+                    <Text style={styles.playerName}>{p.username}{i === 0 ? ' (방장)' : ''}</Text>
+                  </View>
+                ))}
+              </View>
+
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
-              <Button title="배틀 입장" onPress={() => router.push(`/(tabs)/battle/${battleId}`)} style={{ marginTop: 24 }} />
-              <Button title="← 취소" onPress={reset} variant="secondary" style={{ marginTop: 8 }} />
+
+              {isHost ? (
+                <Button
+                  title={battle.players.length < 2 ? '2명 이상 모여야 시작 가능' : '배틀 시작'}
+                  onPress={handleStart}
+                  loading={loading}
+                  disabled={battle.players.length < 2}
+                  style={{ marginTop: 24 }}
+                />
+              ) : (
+                <Text style={styles.waitingText}>방장이 시작하면 자동으로 입장합니다…</Text>
+              )}
+              <Button title="← 나가기" onPress={reset} variant="secondary" style={{ marginTop: 8 }} />
             </>
           )}
 
@@ -228,10 +203,8 @@ const styles = StyleSheet.create({
   content: { padding: 24 },
   heading: { fontSize: 20, fontWeight: '700', color: '#111827', marginBottom: 16 },
   sub: { fontSize: 13, color: '#6b7280', marginBottom: 12 },
-  label: { fontSize: 13, fontWeight: '500', color: '#374151', marginBottom: 6 },
   item: { marginBottom: 8 },
   empty: { textAlign: 'center', color: '#9ca3af', marginTop: 24 },
-  noDecks: { alignItems: 'center', marginTop: 24 },
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 12 },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#e5e7eb' },
   dividerText: { fontSize: 12, color: '#9ca3af' },
@@ -241,4 +214,9 @@ const styles = StyleSheet.create({
   copyText: { fontSize: 13, fontWeight: '600', color: '#6366f1' },
   copyTextDone: { color: '#22c55e' },
   errorText: { color: '#ef4444', fontSize: 13, marginTop: 12, textAlign: 'center' },
+  playersLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginTop: 24, marginBottom: 8 },
+  playersList: { gap: 6 },
+  playerRow: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, padding: 12 },
+  playerName: { fontSize: 14, color: '#111827', fontWeight: '500' },
+  waitingText: { textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 24 },
 });

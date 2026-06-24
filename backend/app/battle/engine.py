@@ -1,84 +1,92 @@
+from typing import Optional
 from app.battle.state import BattleState
 
-OPS = {
-    "<":  lambda a, b: a < b,
-    ">":  lambda a, b: a > b,
-    "<=": lambda a, b: a <= b,
-    ">=": lambda a, b: a >= b,
-    "==": lambda a, b: a == b,
-    "!=": lambda a, b: a != b,
-}
+DiscardObligation = tuple[int, int]  # (seat, count)
 
 
-def _resolve_stat(stat: str, state: BattleState, actor: str) -> int | float:
-    opponent = "b" if actor == "a" else "a"
-    mapping = {
-        "self.hp":            getattr(state, f"hp_{actor}"),
-        "self.resources":     getattr(state, f"resources_{actor}"),
-        "opponent.hp":        getattr(state, f"hp_{opponent}"),
-        "opponent.resources": getattr(state, f"resources_{opponent}"),
-    }
-    if stat not in mapping:
-        raise ValueError(f"Unknown stat: {stat}")
-    return mapping[stat]
+def _draw_one(state: BattleState, seat: int) -> None:
+    if not state.shared_deck:
+        return
+    state.hands[seat].append(state.shared_deck.pop(0))
 
 
-def evaluate_conditions(conditions: list[dict], state: BattleState, actor: str) -> bool:
-    for cond in conditions:
-        val = _resolve_stat(cond["stat"], state, actor)
-        op_fn = OPS.get(cond["op"])
-        if op_fn is None:
-            raise ValueError(f"Unknown op: {cond['op']}")
-        if not op_fn(val, cond["value"]):
-            return False
-    return True
-
-
-def apply_action(action: dict, state: BattleState, actor: str) -> None:
-    opponent = "b" if actor == "a" else "a"
-    t = action["type"]
-    v = action.get("value", 0)
-    target = action.get("target", "opponent")
-    target_player = actor if target == "self" else opponent
-
-    if t == "deal_damage":
-        cur = getattr(state, f"hp_{target_player}")
-        setattr(state, f"hp_{target_player}", max(0, cur - v))
-    elif t == "heal":
-        cur = getattr(state, f"hp_{target_player}")
-        setattr(state, f"hp_{target_player}", min(state.initial_hp, cur + v))
-    elif t == "buff_stat":
-        stat = action.get("stat", "resources")
-        cur = getattr(state, f"{stat}_{target_player}", 0)
-        setattr(state, f"{stat}_{target_player}", cur + v)
-    elif t == "debuff_stat":
-        stat = action.get("stat", "resources")
-        cur = getattr(state, f"{stat}_{target_player}", 0)
-        setattr(state, f"{stat}_{target_player}", max(0, cur - v))
-    elif t == "draw_card":
-        remaining = getattr(state, f"deck_remaining_{target_player}")
-        hand = getattr(state, f"hand_{target_player}")
-        for _ in range(min(v, len(remaining))):
-            hand.append(remaining.pop(0))
-    elif t == "discard_card":
-        hand = getattr(state, f"hand_{target_player}")
-        for _ in range(min(v, len(hand))):
-            hand.pop()
-    elif t == "skip_turn":
-        pass
-
-
-def run_effects(
-    effects: list[dict],
-    trigger: str,
+def resolve_effect(
+    effect_type: str,
+    effect_value: int,
+    effect_target: str,
+    actor: int,
     state: BattleState,
-    actor: str,
-) -> None:
-    for effect in effects:
-        if effect.get("trigger") != trigger:
-            continue
-        conditions = effect.get("conditions", [])
-        if not evaluate_conditions(conditions, state, actor):
-            continue
-        for action in effect.get("actions", []):
-            apply_action(action, state, actor)
+    activator: Optional[int] = None,
+    target_seat: Optional[int] = None,
+) -> list[DiscardObligation]:
+    """카드 효과를 적용한다. 'discard' 효과는 손패 주인이 직접 고를 카드이므로 즉시 처리하지 않고
+    (seat, count) 의무 목록으로 반환한다 — 호출부가 state.pending_discards에 쌓고 선택을 기다려야 한다."""
+    if effect_type == "none" or effect_value <= 0:
+        return []
+
+    if effect_target == "all":
+        all_seats = list(range(state.num_players))
+        other_seats = [s for s in all_seats if s != actor]
+        if effect_type == "draw":
+            for _ in range(effect_value):
+                for seat in all_seats:
+                    _draw_one(state, seat)
+        elif effect_type == "discard":
+            return [(seat, min(effect_value, len(state.hands[seat]))) for seat in all_seats if state.hands[seat]]
+        elif effect_type == "steal":
+            for seat in other_seats:
+                for _ in range(effect_value):
+                    src = state.hands[seat]
+                    if not src:
+                        break
+                    state.hands[actor].append(src.pop())
+        elif effect_type == "give":
+            for seat in other_seats:
+                for _ in range(effect_value):
+                    src = state.hands[actor]
+                    if not src:
+                        break
+                    state.hands[seat].append(src.pop())
+        return []
+
+    if effect_target == "activator":
+        target = activator if activator is not None else actor
+    elif effect_target == "opponent":
+        target = target_seat if target_seat is not None else actor
+    else:
+        target = actor
+
+    if effect_type == "draw":
+        for _ in range(effect_value):
+            _draw_one(state, target)
+
+    elif effect_type == "discard":
+        owed = min(effect_value, len(state.hands[target]))
+        return [(target, owed)] if owed > 0 else []
+
+    elif effect_type == "steal":
+        counterparty = target_seat if target_seat is not None else target
+        src = state.hands[counterparty]
+        dst = state.hands[target]
+        for _ in range(effect_value):
+            if not src:
+                break
+            dst.append(src.pop())
+
+    elif effect_type == "give":
+        counterparty = target_seat if target_seat is not None else target
+        src = state.hands[target]
+        dst = state.hands[counterparty]
+        for _ in range(effect_value):
+            if not src:
+                break
+            dst.append(src.pop())
+
+    return []
+
+
+def needs_target_seat(card, num_players: int) -> bool:
+    """2명 초과이고 효과 대상이 'all'이 아닐 때, 상대(2번째 플레이어)를 명시적으로 지정해야 하는지 여부."""
+    if num_players <= 2 or card.effect_target == "all":
+        return False
+    return card.effect_target == "opponent" or card.effect_type in ("steal", "give")
