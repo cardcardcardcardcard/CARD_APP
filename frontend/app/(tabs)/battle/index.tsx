@@ -6,6 +6,7 @@ import { Button } from '../../../components/ui/Button';
 import { ScreenContainer } from '../../../components/ui/ScreenContainer';
 import { LoadingView } from '../../../components/ui/LoadingView';
 import { listPublicGames, listMyDecks, createBattle, getBattle, joinBattle } from '../../../lib/api';
+import { getActiveDeckId } from '../../../lib/storage';
 import type { GameOut, DeckOut } from '../../../types/api';
 
 type Step = 'pick_game' | 'pick_deck' | 'lobby' | 'join';
@@ -29,7 +30,13 @@ export default function BattleLobby() {
     setSelectedGame(game);
     setLoading(true);
     try {
-      setDecks(await listMyDecks(game.id));
+      const [fetchedDecks, activeDeckId] = await Promise.all([
+        listMyDecks(game.id),
+        getActiveDeckId(game.id),
+      ]);
+      setDecks(fetchedDecks);
+      const active = fetchedDecks.find(d => d.id === activeDeckId) ?? fetchedDecks[0] ?? null;
+      setSelectedDeck(active);
       setStep('pick_deck');
     } catch { Alert.alert('오류', '덱 로드 실패'); }
     setLoading(false);
