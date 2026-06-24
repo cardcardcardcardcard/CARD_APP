@@ -14,7 +14,7 @@ export default function Login() {
   const setAuth = useAuthStore(s => s.setAuth);
 
   const submit = async () => {
-    if (!email || !password) { Alert.alert('Error', 'Fill in all fields'); return; }
+    if (!email || !password) { Alert.alert('오류', '모든 항목을 입력해주세요'); return; }
     setLoading(true);
     try {
       const { access_token } = await login({ email, password });
@@ -25,7 +25,7 @@ export default function Login() {
       await setAuth(access_token, user);
       router.replace('/(tabs)/explore');
     } catch (e: any) {
-      Alert.alert('Login failed', e?.response?.data?.detail ?? 'Unknown error');
+      Alert.alert('로그인 실패', e?.response?.data?.detail ?? '알 수 없는 오류');
     } finally {
       setLoading(false);
     }
@@ -35,12 +35,12 @@ export default function Login() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>CardCard</Text>
-        <Text style={styles.subtitle}>Sign in to continue</Text>
-        <Input label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-        <Input label="Password" value={password} onChangeText={setPassword} secureTextEntry />
-        <Button title="Login" onPress={submit} loading={loading} />
+        <Text style={styles.subtitle}>계정에 로그인하세요</Text>
+        <Input label="이메일" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+        <Input label="비밀번호" value={password} onChangeText={setPassword} secureTextEntry />
+        <Button title="로그인" onPress={submit} loading={loading} />
         <Link href="/(auth)/register" style={styles.link}>
-          Don't have an account? Register
+          계정이 없으신가요? 회원가입
         </Link>
       </ScrollView>
     </KeyboardAvoidingView>

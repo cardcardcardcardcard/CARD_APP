@@ -12,7 +12,7 @@ export default function GameDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getGame(gameId).then(setGame).catch(() => Alert.alert('Error', 'Game not found')).finally(() => setLoading(false));
+    getGame(gameId).then(setGame).catch(() => Alert.alert('오류', '게임을 찾을 수 없습니다')).finally(() => setLoading(false));
   }, [gameId]);
 
   if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#6366f1" />;
@@ -28,15 +28,15 @@ export default function GameDetail() {
           <Text style={styles.title}>{game.title}</Text>
           {game.description ? <Text style={styles.desc}>{game.description}</Text> : null}
 
-          <Text style={styles.sectionTitle}>Ruleset</Text>
+          <Text style={styles.sectionTitle}>룰셋</Text>
           <View style={styles.ruleGrid}>
             {([
-              ['Deck size', rs.deck_size],
-              ['Hand limit', rs.hand_limit],
-              ['Swap every', `${rs.swap_interval} turns`],
-              ['Win condition', rs.win_condition],
-              ['Resource', rs.resource_system],
-              ['Start resource', rs.initial_resource],
+              ['덱 크기', rs.deck_size],
+              ['손패 제한', rs.hand_limit],
+              ['스왑 주기', `${rs.swap_interval} 턴`],
+              ['승리 조건', rs.win_condition],
+              ['자원', rs.resource_system],
+              ['초기 자원', rs.initial_resource],
             ] as [string, string | number][]).map(([k, v]) => (
               <View key={k} style={styles.ruleRow}>
                 <Text style={styles.ruleKey}>{k}</Text>
@@ -46,7 +46,7 @@ export default function GameDetail() {
           </View>
 
           <Button
-            title="Build a Deck & Battle"
+            title="덱 만들고 배틀하기"
             onPress={() => router.push(`/(tabs)/battle?game_id=${game.id}`)}
             style={{ margin: 16 }}
           />

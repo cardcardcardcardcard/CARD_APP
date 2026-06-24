@@ -30,13 +30,13 @@ export default function CreateGame() {
     setRuleset(r => ({ ...r, [key]: val }));
 
   const submit = async () => {
-    if (!title.trim()) { Alert.alert('Error', 'Title required'); return; }
+    if (!title.trim()) { Alert.alert('오류', '제목을 입력해주세요'); return; }
     setLoading(true);
     try {
       const game = await createGame({ title: title.trim(), description: description.trim() || undefined, is_public: isPublic, ruleset });
       router.replace(`/(tabs)/my-games/${game.id}`);
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.detail ?? 'Failed to create game');
+      Alert.alert('오류', e?.response?.data?.detail ?? '게임 생성 실패');
     } finally {
       setLoading(false);
     }
@@ -44,24 +44,24 @@ export default function CreateGame() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'New Game' }} />
+      <Stack.Screen options={{ title: '새 게임' }} />
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.form}>
-          <Input label="Title" value={title} onChangeText={setTitle} placeholder="My awesome card game" />
-          <Input label="Description (optional)" value={description} onChangeText={setDescription} multiline numberOfLines={3} />
+          <Input label="제목" value={title} onChangeText={setTitle} placeholder="나만의 카드 게임" />
+          <Input label="설명 (선택)" value={description} onChangeText={setDescription} multiline numberOfLines={3} />
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Public</Text>
+            <Text style={styles.rowLabel}>공개</Text>
             <Switch value={isPublic} onValueChange={setIsPublic} trackColor={{ true: '#6366f1' }} />
           </View>
 
-          <Text style={styles.section}>Ruleset</Text>
-          <Input label="Deck size" value={String(ruleset.deck_size)} onChangeText={v => setR('deck_size', Number(v) || 20)} keyboardType="numeric" />
-          <Input label="Hand limit" value={String(ruleset.hand_limit)} onChangeText={v => setR('hand_limit', Number(v) || 5)} keyboardType="numeric" />
-          <Input label="Swap interval (turns)" value={String(ruleset.swap_interval)} onChangeText={v => setR('swap_interval', Number(v) || 3)} keyboardType="numeric" />
-          <Input label="Initial resource" value={String(ruleset.initial_resource)} onChangeText={v => setR('initial_resource', Number(v) || 1)} keyboardType="numeric" />
-          <Input label="Resource per turn" value={String(ruleset.resource_per_turn)} onChangeText={v => setR('resource_per_turn', Number(v) || 1)} keyboardType="numeric" />
+          <Text style={styles.section}>룰셋</Text>
+          <Input label="덱 크기" value={String(ruleset.deck_size)} onChangeText={v => setR('deck_size', Number(v) || 20)} keyboardType="numeric" />
+          <Input label="손패 제한" value={String(ruleset.hand_limit)} onChangeText={v => setR('hand_limit', Number(v) || 5)} keyboardType="numeric" />
+          <Input label="스왑 주기 (턴)" value={String(ruleset.swap_interval)} onChangeText={v => setR('swap_interval', Number(v) || 3)} keyboardType="numeric" />
+          <Input label="초기 자원" value={String(ruleset.initial_resource)} onChangeText={v => setR('initial_resource', Number(v) || 1)} keyboardType="numeric" />
+          <Input label="턴당 자원" value={String(ruleset.resource_per_turn)} onChangeText={v => setR('resource_per_turn', Number(v) || 1)} keyboardType="numeric" />
 
-          <Button title="Create Game" onPress={submit} loading={loading} style={{ marginTop: 16 }} />
+          <Button title="게임 생성" onPress={submit} loading={loading} style={{ marginTop: 16 }} />
         </ScrollView>
       </SafeAreaView>
     </>

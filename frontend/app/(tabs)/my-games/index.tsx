@@ -22,7 +22,7 @@ export default function MyGames() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.heading}>My Games</Text>
+        <Text style={styles.heading}>내 게임</Text>
         <TouchableOpacity onPress={() => router.push('/(tabs)/my-games/create')}>
           <Ionicons name="add-circle" size={28} color="#6366f1" />
         </TouchableOpacity>
@@ -37,14 +37,14 @@ export default function MyGames() {
           renderItem={({ item }) => (
             <TouchableOpacity style={styles.card} onPress={() => router.push(`/(tabs)/my-games/${item.id}`)}>
               <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.meta}>{item.is_public ? 'Public' : 'Private'} · Swap/{item.ruleset.swap_interval}t</Text>
+              <Text style={styles.meta}>{item.is_public ? '공개' : '비공개'} · Swap/{item.ruleset.swap_interval}t</Text>
             </TouchableOpacity>
           )}
           ListEmptyComponent={
             <View style={styles.emptyBox}>
-              <Text style={styles.empty}>No games yet.</Text>
+              <Text style={styles.empty}>게임이 없습니다.</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/my-games/create')}>
-                <Text style={styles.createLink}>Create your first game →</Text>
+                <Text style={styles.createLink}>첫 게임 만들기 →</Text>
               </TouchableOpacity>
             </View>
           }

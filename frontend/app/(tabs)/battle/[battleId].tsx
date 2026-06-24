@@ -26,7 +26,7 @@ export default function BattleScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <ActivityIndicator size="large" color="#6366f1" style={{ flex: 1 }} />
-        <Text style={styles.connectingText}>Connecting…</Text>
+        <Text style={styles.connectingText}>연결 중…</Text>
       </SafeAreaView>
     );
   }
@@ -34,8 +34,8 @@ export default function BattleScreen() {
   if (winner) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.winnerText}>{winner === 'a' ? 'Player A' : 'Player B'} wins!</Text>
-        <Button title="Back to Lobby" onPress={() => router.replace('/(tabs)/battle')} style={{ margin: 24 }} />
+        <Text style={styles.winnerText}>{winner === 'a' ? '플레이어 A 승리!' : '플레이어 B 승리!'}</Text>
+        <Button title="로비로 돌아가기" onPress={() => router.replace('/(tabs)/battle')} style={{ margin: 24 }} />
       </SafeAreaView>
     );
   }
@@ -56,56 +56,56 @@ export default function BattleScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Battle', headerShown: false }} />
+      <Stack.Screen options={{ title: '배틀', headerShown: false }} />
       <SafeAreaView style={styles.container}>
         {swapped && (
           <View style={styles.swapBanner}>
-            <Text style={styles.swapText}>🔄 Decks Swapped!</Text>
+            <Text style={styles.swapText}>🔄 덱이 교체됐습니다!</Text>
           </View>
         )}
 
         {/* Opponent */}
         <View style={styles.playerZone}>
-          <Text style={styles.playerLabel}>Opponent</Text>
+          <Text style={styles.playerLabel}>상대방</Text>
           <View style={styles.hpBar}>
             <View style={[styles.hpFill, { width: `${(opHp / state.initial_hp) * 100}%`, backgroundColor: '#ef4444' }]} />
           </View>
           <Text style={styles.hpText}>HP: {opHp}/{state.initial_hp}</Text>
-          <Text style={styles.deckText}>Deck ({opDeckLabel.toUpperCase()}): {opDeckRemaining.length} cards</Text>
-          <Text style={styles.handText}>Hand: {opHand.length} cards</Text>
+          <Text style={styles.deckText}>덱 ({opDeckLabel.toUpperCase()}): {opDeckRemaining.length}장</Text>
+          <Text style={styles.handText}>손패: {opHand.length}장</Text>
         </View>
 
         {/* Turn info */}
         <View style={styles.turnBar}>
-          <Text style={styles.turnText}>Turn {state.turn_number}</Text>
-          <Text style={styles.activeText}>{isMyTurn ? 'Your turn' : "Opponent's turn"}</Text>
-          <Text style={styles.phaseText}>Phase: {state.phase}</Text>
+          <Text style={styles.turnText}>{state.turn_number}턴</Text>
+          <Text style={styles.activeText}>{isMyTurn ? '내 차례' : '상대방 차례'}</Text>
+          <Text style={styles.phaseText}>페이즈: {state.phase}</Text>
         </View>
 
         {/* Your zone */}
         <View style={styles.playerZone}>
-          <Text style={styles.playerLabel}>You</Text>
+          <Text style={styles.playerLabel}>나</Text>
           <View style={styles.hpBar}>
             <View style={[styles.hpFill, { width: `${(myHp / state.initial_hp) * 100}%`, backgroundColor: '#22c55e' }]} />
           </View>
           <Text style={styles.hpText}>HP: {myHp}/{state.initial_hp}</Text>
-          <Text style={styles.deckText}>Deck ({myDeckLabel.toUpperCase()}): {myDeckRemaining.length} cards</Text>
-          <Text style={styles.handText}>Hand: {myHand.length} cards</Text>
-          <Text style={styles.resourceText}>Resources: {myResources}</Text>
+          <Text style={styles.deckText}>덱 ({myDeckLabel.toUpperCase()}): {myDeckRemaining.length}장</Text>
+          <Text style={styles.handText}>손패: {myHand.length}장</Text>
+          <Text style={styles.resourceText}>자원: {myResources}</Text>
         </View>
 
         {/* Actions */}
         {isMyTurn && (
           <View style={styles.actions}>
-            <Button title="Attack (10)" onPress={() => sendAttack(10)} style={styles.actionBtn} />
-            <Button title="Attack (20)" onPress={() => sendAttack(20)} style={styles.actionBtn} />
-            <Button title="End Turn" onPress={sendEndTurn} variant="secondary" style={styles.actionBtn} />
+            <Button title="공격 (10)" onPress={() => sendAttack(10)} style={styles.actionBtn} />
+            <Button title="공격 (20)" onPress={() => sendAttack(20)} style={styles.actionBtn} />
+            <Button title="턴 종료" onPress={sendEndTurn} variant="secondary" style={styles.actionBtn} />
           </View>
         )}
 
         {!isMyTurn && (
           <View style={styles.waiting}>
-            <Text style={styles.waitingText}>Waiting for opponent…</Text>
+            <Text style={styles.waitingText}>상대방 대기 중…</Text>
           </View>
         )}
 

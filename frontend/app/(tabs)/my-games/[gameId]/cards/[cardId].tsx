@@ -24,13 +24,13 @@ export default function EditCard() {
   }, [gameId, cardId]);
 
   const save = async () => {
-    if (!name.trim()) { Alert.alert('Error', 'Name required'); return; }
+    if (!name.trim()) { Alert.alert('오류', '이름을 입력해주세요'); return; }
     setSaving(true);
     try {
       await updateCard(gameId, cardId, { name: name.trim(), effects });
       router.back();
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.detail ?? 'Failed to save');
+      Alert.alert('오류', e?.response?.data?.detail ?? '저장 실패');
     } finally {
       setSaving(false);
     }
@@ -40,12 +40,12 @@ export default function EditCard() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Edit Card' }} />
+      <Stack.Screen options={{ title: '카드 수정' }} />
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.form}>
-          <Input label="Card Name" value={name} onChangeText={setName} />
+          <Input label="카드 이름" value={name} onChangeText={setName} />
           <BlockBuilder effects={effects} onChange={setEffects} />
-          <Button title="Save Card" onPress={save} loading={saving} style={{ marginTop: 16 }} />
+          <Button title="카드 저장" onPress={save} loading={saving} style={{ marginTop: 16 }} />
         </ScrollView>
       </SafeAreaView>
     </>

@@ -14,14 +14,14 @@ export default function Profile() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>Profile</Text>
+      <Text style={styles.heading}>프로필</Text>
       {user && (
         <>
           <Text style={styles.name}>{user.username}</Text>
           <Text style={styles.email}>{user.email}</Text>
         </>
       )}
-      <Button title="Logout" onPress={logout} variant="danger" style={{ marginTop: 24 }} />
+      <Button title="로그아웃" onPress={logout} variant="danger" style={{ marginTop: 24 }} />
     </SafeAreaView>
   );
 }

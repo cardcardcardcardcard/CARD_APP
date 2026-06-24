@@ -21,7 +21,7 @@ export default function MyDecks() {
   return (
     <>
       <Stack.Screen options={{
-        title: 'My Decks',
+        title: '내 덱',
         headerRight: () => (
           <TouchableOpacity onPress={() => router.push(`/(tabs)/my-games/${gameId}/decks/create`)}>
             <Ionicons name="add" size={24} color="#6366f1" />
@@ -36,10 +36,10 @@ export default function MyDecks() {
             renderItem={({ item }) => (
               <View style={styles.card}>
                 <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.meta}>{item.card_ids.length}/{game?.ruleset.deck_size ?? '?'} cards</Text>
+                <Text style={styles.meta}>{item.card_ids.length}/{game?.ruleset.deck_size ?? '?'} 장</Text>
               </View>
             )}
-            ListEmptyComponent={<Text style={styles.empty}>No decks yet. Tap + to build one.</Text>}
+            ListEmptyComponent={<Text style={styles.empty}>덱이 없습니다. +를 눌러 만드세요.</Text>}
           />
         )}
       </SafeAreaView>

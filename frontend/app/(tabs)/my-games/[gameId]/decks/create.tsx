@@ -28,9 +28,9 @@ export default function CreateDeck() {
 
   const save = async () => {
     const deckSize = game?.ruleset.deck_size ?? 20;
-    if (!name.trim()) { Alert.alert('Error', 'Deck name required'); return; }
+    if (!name.trim()) { Alert.alert('오류', '덱 이름을 입력해주세요'); return; }
     if (selected.length !== deckSize) {
-      Alert.alert('Error', `Select exactly ${deckSize} cards (${selected.length} selected)`);
+      Alert.alert('오류', `정확히 ${deckSize}장을 선택해주세요 (현재 ${selected.length}장)`);
       return;
     }
     setSaving(true);
@@ -38,7 +38,7 @@ export default function CreateDeck() {
       await createDeck(gameId, { name: name.trim(), card_ids: selected });
       router.back();
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.detail ?? 'Failed to create deck');
+      Alert.alert('오류', e?.response?.data?.detail ?? '덱 생성 실패');
     } finally {
       setSaving(false);
     }
@@ -49,10 +49,10 @@ export default function CreateDeck() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Build Deck' }} />
+      <Stack.Screen options={{ title: '덱 빌드' }} />
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Input label="Deck Name" value={name} onChangeText={setName} style={{ flex: 1, marginBottom: 0 }} />
+          <Input label="덱 이름" value={name} onChangeText={setName} style={{ flex: 1, marginBottom: 0 }} />
           <Text style={styles.count}>{selected.length}/{deckSize}</Text>
         </View>
         <FlatList
@@ -63,15 +63,15 @@ export default function CreateDeck() {
             return (
               <TouchableOpacity style={[styles.card, active && styles.cardActive]} onPress={() => toggle(item.id)}>
                 <Text style={[styles.name, active && styles.nameActive]}>{item.name}</Text>
-                <Text style={styles.meta}>{item.effects.length} effect(s)</Text>
+                <Text style={styles.meta}>{item.effects.length} 효과</Text>
                 {active && <Ionicons name="checkmark-circle" size={20} color="#6366f1" style={styles.check} />}
               </TouchableOpacity>
             );
           }}
-          ListEmptyComponent={<Text style={styles.empty}>No cards in this game yet.</Text>}
+          ListEmptyComponent={<Text style={styles.empty}>이 게임에 카드가 없습니다.</Text>}
         />
         <View style={styles.footer}>
-          <Button title={`Save Deck (${selected.length}/${deckSize})`} onPress={save} loading={saving} />
+          <Button title={`덱 저장 (${selected.length}/${deckSize})`} onPress={save} loading={saving} />
         </View>
       </SafeAreaView>
     </>

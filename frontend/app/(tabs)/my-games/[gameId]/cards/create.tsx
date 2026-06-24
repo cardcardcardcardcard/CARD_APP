@@ -16,13 +16,13 @@ export default function CreateCard() {
   const [loading, setLoading] = useState(false);
 
   const submit = async () => {
-    if (!name.trim()) { Alert.alert('Error', 'Card name required'); return; }
+    if (!name.trim()) { Alert.alert('오류', '카드 이름을 입력해주세요'); return; }
     setLoading(true);
     try {
       await createCard(gameId, { name: name.trim(), attributes: {}, effects });
       router.back();
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.detail ?? 'Failed to create card');
+      Alert.alert('오류', e?.response?.data?.detail ?? '카드 생성 실패');
     } finally {
       setLoading(false);
     }
@@ -30,12 +30,12 @@ export default function CreateCard() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'New Card' }} />
+      <Stack.Screen options={{ title: '새 카드' }} />
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.form}>
-          <Input label="Card Name" value={name} onChangeText={setName} placeholder="Lightning Bolt" />
+          <Input label="카드 이름" value={name} onChangeText={setName} placeholder="번개 화살" />
           <BlockBuilder effects={effects} onChange={setEffects} />
-          <Button title="Create Card" onPress={submit} loading={loading} style={{ marginTop: 16 }} />
+          <Button title="카드 생성" onPress={submit} loading={loading} style={{ marginTop: 16 }} />
         </ScrollView>
       </SafeAreaView>
     </>

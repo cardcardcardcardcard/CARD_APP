@@ -16,7 +16,7 @@ export default function Register() {
   const setAuth = useAuthStore(s => s.setAuth);
 
   const submit = async () => {
-    if (!username || !email || !password) { Alert.alert('Error', 'Fill in all fields'); return; }
+    if (!username || !email || !password) { Alert.alert('오류', '모든 항목을 입력해주세요'); return; }
     setLoading(true);
     try {
       await register({ username, email, password });
@@ -26,7 +26,7 @@ export default function Register() {
       await setAuth(access_token, user);
       router.replace('/(tabs)/explore');
     } catch (e: any) {
-      Alert.alert('Register failed', e?.response?.data?.detail ?? 'Unknown error');
+      Alert.alert('회원가입 실패', e?.response?.data?.detail ?? '알 수 없는 오류');
     } finally {
       setLoading(false);
     }
@@ -36,13 +36,13 @@ export default function Register() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>CardCard</Text>
-        <Text style={styles.subtitle}>Create your account</Text>
-        <Input label="Username" value={username} onChangeText={setUsername} autoCapitalize="none" />
-        <Input label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-        <Input label="Password" value={password} onChangeText={setPassword} secureTextEntry />
-        <Button title="Register" onPress={submit} loading={loading} />
+        <Text style={styles.subtitle}>계정을 만드세요</Text>
+        <Input label="사용자 이름" value={username} onChangeText={setUsername} autoCapitalize="none" />
+        <Input label="이메일" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+        <Input label="비밀번호" value={password} onChangeText={setPassword} secureTextEntry />
+        <Button title="회원가입" onPress={submit} loading={loading} />
         <Link href="/(auth)/login" style={styles.link}>
-          Already have an account? Login
+          이미 계정이 있으신가요? 로그인
         </Link>
       </ScrollView>
     </KeyboardAvoidingView>

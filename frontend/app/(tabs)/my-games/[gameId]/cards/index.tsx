@@ -20,9 +20,9 @@ export default function CardList() {
   useEffect(() => { load(); }, [gameId]);
 
   const remove = (card: CardOut) =>
-    Alert.alert('Delete Card', `Delete "${card.name}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
+    Alert.alert('카드 삭제', `"${card.name}"을(를) 삭제할까요?`, [
+      { text: '취소', style: 'cancel' },
+      { text: '삭제', style: 'destructive', onPress: async () => {
         await deleteCard(gameId, card.id);
         load();
       }},
@@ -31,7 +31,7 @@ export default function CardList() {
   return (
     <>
       <Stack.Screen options={{
-        title: 'Cards',
+        title: '카드',
         headerRight: () => (
           <TouchableOpacity onPress={() => router.push(`/(tabs)/my-games/${gameId}/cards/create`)}>
             <Ionicons name="add" size={24} color="#6366f1" />
@@ -47,14 +47,14 @@ export default function CardList() {
               <TouchableOpacity style={styles.card} onPress={() => router.push(`/(tabs)/my-games/${gameId}/cards/${item.id}`)}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.meta}>{item.effects.length} effect(s)</Text>
+                  <Text style={styles.meta}>{item.effects.length} 효과</Text>
                 </View>
                 <TouchableOpacity onPress={() => remove(item)}>
                   <Ionicons name="trash-outline" size={18} color="#ef4444" />
                 </TouchableOpacity>
               </TouchableOpacity>
             )}
-            ListEmptyComponent={<Text style={styles.empty}>No cards yet. Tap + to add.</Text>}
+            ListEmptyComponent={<Text style={styles.empty}>카드가 없습니다. +를 눌러 추가하세요.</Text>}
           />
         )}
       </SafeAreaView>

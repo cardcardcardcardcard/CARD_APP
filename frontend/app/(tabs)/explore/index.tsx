@@ -19,7 +19,7 @@ export default function Explore() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>Explore Games</Text>
+      <Text style={styles.heading}>게임 탐색</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#6366f1" style={{ marginTop: 40 }} />
       ) : (
@@ -30,10 +30,10 @@ export default function Explore() {
           renderItem={({ item }) => (
             <TouchableOpacity style={styles.card} onPress={() => router.push(`/(tabs)/explore/${item.id}`)}>
               <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.meta}>Swap every {item.ruleset.swap_interval} turns · Deck {item.ruleset.deck_size} cards</Text>
+              <Text style={styles.meta}>{item.ruleset.swap_interval}턴마다 스왑 · 덱 {item.ruleset.deck_size}장</Text>
             </TouchableOpacity>
           )}
-          ListEmptyComponent={<Text style={styles.empty}>No public games yet.</Text>}
+          ListEmptyComponent={<Text style={styles.empty}>공개 게임이 없습니다.</Text>}
         />
       )}
     </SafeAreaView>

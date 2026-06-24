@@ -7,7 +7,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
+          title: '탐색',
           tabBarIcon: ({ color, size }) => <Ionicons name="search" color={color} size={size} />,
           headerShown: false,
         }}
@@ -15,7 +15,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="my-games"
         options={{
-          title: 'My Games',
+          title: '내 게임',
           tabBarIcon: ({ color, size }) => <Ionicons name="game-controller" color={color} size={size} />,
           headerShown: false,
         }}
@@ -23,7 +23,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="battle"
         options={{
-          title: 'Battle',
+          title: '배틀',
           tabBarIcon: ({ color, size }) => <Ionicons name="flash" color={color} size={size} />,
           headerShown: false,
         }}
@@ -31,7 +31,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: '프로필',
           tabBarIcon: ({ color, size }) => <Ionicons name="person" color={color} size={size} />,
           headerShown: false,
         }}

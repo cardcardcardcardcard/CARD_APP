@@ -75,57 +75,57 @@ export function BlockBuilder({ effects, onChange }: Props) {
   return (
     <View>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Effects ({effects.length})</Text>
+        <Text style={styles.sectionTitle}>효과 ({effects.length})</Text>
         <TouchableOpacity onPress={addEffect} style={styles.addBtn}>
           <Ionicons name="add" size={18} color="#fff" />
-          <Text style={styles.addBtnText}>Add Effect</Text>
+          <Text style={styles.addBtnText}>효과 추가</Text>
         </TouchableOpacity>
       </View>
 
       {effects.map((effect, ei) => (
         <View key={ei} style={styles.effectCard}>
           <View style={styles.effectHeader}>
-            <Text style={styles.effectTitle}>Effect {ei + 1}</Text>
+            <Text style={styles.effectTitle}>효과 {ei + 1}</Text>
             <TouchableOpacity onPress={() => removeEffect(ei)}>
               <Ionicons name="trash-outline" size={18} color="#ef4444" />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.subLabel}>Trigger</Text>
+          <Text style={styles.subLabel}>발동 조건</Text>
           <Picker value={effect.trigger} options={TRIGGERS} onChange={v => updateEffect(ei, { trigger: v })} />
 
-          <Text style={styles.subLabel}>Conditions</Text>
+          <Text style={styles.subLabel}>조건</Text>
           {effect.conditions.map((cond, ci) => (
             <View key={ci} style={styles.block}>
               <Picker value={cond.stat} options={STATS} onChange={v => updateCondition(ei, ci, { stat: v })} />
               <Picker value={cond.op} options={OPS} onChange={v => updateCondition(ei, ci, { op: v })} />
-              <NumberInput value={cond.value} onChange={v => updateCondition(ei, ci, { value: v })} label="Value" />
+              <NumberInput value={cond.value} onChange={v => updateCondition(ei, ci, { value: v })} label="값" />
               <TouchableOpacity onPress={() => removeCondition(ei, ci)} style={styles.removeRow}>
-                <Text style={styles.removeText}>Remove condition</Text>
+                <Text style={styles.removeText}>조건 삭제</Text>
               </TouchableOpacity>
             </View>
           ))}
           <TouchableOpacity onPress={() => addCondition(ei)} style={styles.addRowBtn}>
-            <Text style={styles.addRowText}>+ Add condition</Text>
+            <Text style={styles.addRowText}>+ 조건 추가</Text>
           </TouchableOpacity>
 
-          <Text style={styles.subLabel}>Actions</Text>
+          <Text style={styles.subLabel}>행동</Text>
           {effect.actions.map((action, ai) => (
             <View key={ai} style={styles.block}>
               <Picker value={action.type} options={ACTION_TYPES} onChange={v => updateAction(ei, ai, { type: v })} />
               {['deal_damage', 'heal', 'buff_stat', 'debuff_stat', 'draw_card', 'discard_card'].includes(action.type) && (
-                <NumberInput value={action.value ?? 0} onChange={v => updateAction(ei, ai, { value: v })} label="Amount" />
+                <NumberInput value={action.value ?? 0} onChange={v => updateAction(ei, ai, { value: v })} label="수량" />
               )}
               {['deal_damage', 'heal', 'buff_stat', 'debuff_stat'].includes(action.type) && (
                 <Picker value={action.target ?? 'opponent'} options={TARGETS} onChange={v => updateAction(ei, ai, { target: v })} />
               )}
               <TouchableOpacity onPress={() => removeAction(ei, ai)} style={styles.removeRow}>
-                <Text style={styles.removeText}>Remove action</Text>
+                <Text style={styles.removeText}>행동 삭제</Text>
               </TouchableOpacity>
             </View>
           ))}
           <TouchableOpacity onPress={() => addAction(ei)} style={styles.addRowBtn}>
-            <Text style={styles.addRowText}>+ Add action</Text>
+            <Text style={styles.addRowText}>+ 행동 추가</Text>
           </TouchableOpacity>
         </View>
       ))}

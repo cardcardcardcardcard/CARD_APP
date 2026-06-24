@@ -30,7 +30,7 @@ export default function BattleLobby() {
     try {
       setDecks(await listMyDecks(game.id));
       setStep('pick_deck');
-    } catch { Alert.alert('Error', 'Failed to load decks'); }
+    } catch { Alert.alert('오류', '덱 로드 실패'); }
     setLoading(false);
   };
 
@@ -41,7 +41,7 @@ export default function BattleLobby() {
       const battle = await createBattle({ game_id: selectedGame.id, deck_id: selectedDeck.id });
       setBattleId(battle.id);
       setStep('lobby');
-    } catch (e: any) { Alert.alert('Error', e?.response?.data?.detail ?? 'Failed'); }
+    } catch (e: any) { Alert.alert('오류', e?.response?.data?.detail ?? '실패'); }
     setLoading(false);
   };
 
@@ -52,7 +52,7 @@ export default function BattleLobby() {
       const battle = await getBattle(joinCode.trim());
       await joinBattle(battle.id, { deck_id: selectedDeck.id });
       router.push(`/(tabs)/battle/${battle.id}`);
-    } catch (e: any) { Alert.alert('Error', e?.response?.data?.detail ?? 'Battle not found'); }
+    } catch (e: any) { Alert.alert('오류', e?.response?.data?.detail ?? '배틀을 찾을 수 없습니다'); }
     setLoading(false);
   };
 
@@ -60,23 +60,23 @@ export default function BattleLobby() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Battle' }} />
+      <Stack.Screen options={{ title: '배틀' }} />
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
           {step === 'pick_game' && (
             <>
-              <Text style={styles.heading}>Choose a Game</Text>
+              <Text style={styles.heading}>게임 선택</Text>
               {games.map(g => (
                 <Button key={g.id} title={g.title} onPress={() => pickGame(g)} variant="secondary" style={styles.item} />
               ))}
-              {games.length === 0 && <Text style={styles.empty}>No public games. Create one first.</Text>}
+              {games.length === 0 && <Text style={styles.empty}>공개 게임이 없습니다. 먼저 게임을 만드세요.</Text>}
             </>
           )}
 
           {step === 'pick_deck' && (
             <>
-              <Text style={styles.heading}>Choose Your Deck</Text>
-              <Text style={styles.sub}>Game: {selectedGame?.title}</Text>
+              <Text style={styles.heading}>덱 선택</Text>
+              <Text style={styles.sub}>게임: {selectedGame?.title}</Text>
               {decks.map(d => (
                 <Button
                   key={d.id}
@@ -86,26 +86,26 @@ export default function BattleLobby() {
                   style={styles.item}
                 />
               ))}
-              {decks.length === 0 && <Text style={styles.empty}>No decks for this game. Build one first.</Text>}
+              {decks.length === 0 && <Text style={styles.empty}>이 게임에 덱이 없습니다. 먼저 덱을 만드세요.</Text>}
               {selectedDeck && (
                 <>
-                  <Button title="Create Battle Room" onPress={createLobby} loading={loading} style={{ marginTop: 16 }} />
-                  <Text style={styles.orText}>— or join existing —</Text>
-                  <Input label="Battle ID to join" value={joinCode} onChangeText={setJoinCode} autoCapitalize="none" />
-                  <Button title="Join Battle" onPress={joinLobby} loading={loading} variant="secondary" />
+                  <Button title="배틀 방 만들기" onPress={createLobby} loading={loading} style={{ marginTop: 16 }} />
+                  <Text style={styles.orText}>— 또는 기존 방 참가 —</Text>
+                  <Input label="참가할 배틀 ID" value={joinCode} onChangeText={setJoinCode} autoCapitalize="none" />
+                  <Button title="배틀 참가" onPress={joinLobby} loading={loading} variant="secondary" />
                 </>
               )}
-              <Button title="← Back" onPress={() => setStep('pick_game')} variant="secondary" style={{ marginTop: 12 }} />
+              <Button title="← 뒤로" onPress={() => setStep('pick_game')} variant="secondary" style={{ marginTop: 12 }} />
             </>
           )}
 
           {step === 'lobby' && (
             <>
-              <Text style={styles.heading}>Waiting for Opponent</Text>
-              <Text style={styles.sub}>Share this Battle ID:</Text>
+              <Text style={styles.heading}>상대방 대기 중</Text>
+              <Text style={styles.sub}>이 배틀 ID를 공유하세요:</Text>
               <Text style={styles.battleId}>{battleId}</Text>
-              <Button title="Enter Battle" onPress={() => router.push(`/(tabs)/battle/${battleId}`)} style={{ marginTop: 24 }} />
-              <Button title="← Back" onPress={() => setStep('pick_game')} variant="secondary" style={{ marginTop: 8 }} />
+              <Button title="배틀 입장" onPress={() => router.push(`/(tabs)/battle/${battleId}`)} style={{ marginTop: 24 }} />
+              <Button title="← 뒤로" onPress={() => setStep('pick_game')} variant="secondary" style={{ marginTop: 8 }} />
             </>
           )}
         </ScrollView>
