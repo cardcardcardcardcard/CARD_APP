@@ -1,13 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useLocalSearchParams, router, Stack } from 'expo-router';
+import { useLocalSearchParams, router, Stack, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { listCards, getGame, createDeck } from '../../../../lib/api';
 import { Input } from '../../../../components/ui/Input';
 import { Button } from '../../../../components/ui/Button';
 import { ScreenContainer } from '../../../../components/ui/ScreenContainer';
 import { LoadingView } from '../../../../components/ui/LoadingView';
-import { EmptyState } from '../../../../components/ui/EmptyState';
 import type { CardOut, GameOut } from '../../../../types/api';
 
 export default function CreateDeck() {
@@ -19,11 +18,23 @@ export default function CreateDeck() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    Promise.all([listCards(gameId), getGame(gameId)])
-      .then(([c, g]) => { setCards(c); setGame(g); })
-      .finally(() => setLoading(false));
-  }, [gameId]);
+  // useFocusEffect so card list refreshes after returning from card creation
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      const run = async () => {
+        setLoading(true);
+        try {
+          const [c, g] = await Promise.all([listCards(gameId), getGame(gameId)]);
+          if (!cancelled) { setCards(c); setGame(g); }
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      };
+      run();
+      return () => { cancelled = true; };
+    }, [gameId])
+  );
 
   if (loading) return <LoadingView />;
   const deckSize = game?.ruleset.deck_size ?? 20;
@@ -57,6 +68,19 @@ export default function CreateDeck() {
     }
   };
 
+  const ListEmpty = (
+    <View style={styles.emptyWrap}>
+      <Text style={styles.emptyText}>카드가 없습니다.</Text>
+      <TouchableOpacity
+        style={styles.addCardBtn}
+        onPress={() => router.push(`/(tabs)/my-decks/${gameId}/cards/create`)}
+      >
+        <Ionicons name="add-circle-outline" size={20} color="#6366f1" />
+        <Text style={styles.addCardText}>첫 번째 카드 만들기</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <>
       <Stack.Screen options={{ title: '덱 빌드' }} />
@@ -68,6 +92,18 @@ export default function CreateDeck() {
         <FlatList
           data={cards}
           keyExtractor={c => c.id}
+          ListEmptyComponent={ListEmpty}
+          ListFooterComponent={
+            cards.length > 0 ? (
+              <TouchableOpacity
+                style={styles.addCardRow}
+                onPress={() => router.push(`/(tabs)/my-decks/${gameId}/cards/create`)}
+              >
+                <Ionicons name="add-circle-outline" size={18} color="#6366f1" />
+                <Text style={styles.addCardText}>새 카드 만들기</Text>
+              </TouchableOpacity>
+            ) : null
+          }
           renderItem={({ item }) => {
             const count = selected.filter(id => id === item.id).length;
             return (
@@ -88,7 +124,6 @@ export default function CreateDeck() {
               </View>
             );
           }}
-          ListEmptyComponent={<EmptyState message="이 게임에 카드가 없습니다." />}
         />
         <View style={styles.footer}>
           <Button title={`덱 저장 (${selected.length}/${deckSize})`} onPress={save} loading={saving} />
@@ -107,4 +142,9 @@ const styles = StyleSheet.create({
   counter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   countNum: { fontSize: 16, fontWeight: '700', color: '#111827', minWidth: 20, textAlign: 'center' },
   footer: { padding: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  emptyWrap: { alignItems: 'center', paddingVertical: 48, gap: 12 },
+  emptyText: { fontSize: 14, color: '#9ca3af' },
+  addCardBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#eef2ff', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10 },
+  addCardRow: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  addCardText: { fontSize: 14, color: '#6366f1', fontWeight: '500' },
 });
