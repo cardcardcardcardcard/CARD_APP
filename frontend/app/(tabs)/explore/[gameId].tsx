@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { getGame } from '../../../lib/api';
 import { Button } from '../../../components/ui/Button';
@@ -11,16 +11,22 @@ export default function GameDetail() {
   const { gameId } = useLocalSearchParams<{ gameId: string }>();
   const [game, setGame] = useState<GameOut | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     getGame(gameId)
       .then(setGame)
-      .catch(() => Alert.alert('오류', '게임을 찾을 수 없습니다'))
+      .catch(() => setError('게임을 찾을 수 없습니다'))
       .finally(() => setLoading(false));
   }, [gameId]);
 
   if (loading) return <LoadingView />;
-  if (!game) return null;
+  if (!game) return (
+    <>
+      <Stack.Screen options={{ title: '게임' }} />
+      <ScreenContainer><Text style={styles.errorText}>{error}</Text></ScreenContainer>
+    </>
+  );
 
   const rs = game.ruleset;
 
@@ -49,11 +55,18 @@ export default function GameDetail() {
             ))}
           </View>
 
-          <Button
-            title="배틀 참가하기"
-            onPress={() => router.push(`/(tabs)/battle?game_id=${game.id}`)}
-            style={{ margin: 16, marginTop: 8 }}
-          />
+          <View style={styles.actions}>
+            <Button
+              title="배틀 참가하기"
+              onPress={() => router.push(`/(tabs)/battle?game_id=${game.id}`)}
+              style={{ marginBottom: 8 }}
+            />
+            <Button
+              title="덱 만들기"
+              onPress={() => router.push(`/(tabs)/my-decks/${game.id}/create`)}
+              variant="secondary"
+            />
+          </View>
         </ScrollView>
       </ScreenContainer>
     </>
@@ -68,4 +81,6 @@ const styles = StyleSheet.create({
   ruleRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
   ruleKey: { fontSize: 13, color: '#6b7280' },
   ruleVal: { fontSize: 13, fontWeight: '500', color: '#111827' },
+  actions: { padding: 16, marginTop: 8 },
+  errorText: { color: '#ef4444', textAlign: 'center', marginTop: 40 },
 });
