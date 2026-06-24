@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input } from '../../../../../components/ui/Input';
 import { Button } from '../../../../../components/ui/Button';
 import { BlockBuilder } from '../../../../../components/BlockBuilder';
+import { ScreenContainer } from '../../../../../components/ui/ScreenContainer';
 import { createCard } from '../../../../../lib/api';
 import type { CardEffect } from '../../../../../types/api';
 
@@ -31,18 +31,17 @@ export default function CreateCard() {
   return (
     <>
       <Stack.Screen options={{ title: '새 카드' }} />
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer>
         <ScrollView contentContainerStyle={styles.form}>
           <Input label="카드 이름" value={name} onChangeText={setName} placeholder="번개 화살" />
           <BlockBuilder effects={effects} onChange={setEffects} />
           <Button title="카드 생성" onPress={submit} loading={loading} style={{ marginTop: 16 }} />
         </ScrollView>
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   form: { padding: 20 },
 });

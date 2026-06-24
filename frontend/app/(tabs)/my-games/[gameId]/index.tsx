@@ -1,11 +1,11 @@
 // frontend/app/(tabs)/my-games/[gameId]/index.tsx
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { getGame } from '../../../../lib/api';
-import { Button } from '../../../../components/ui/Button';
+import { ScreenContainer } from '../../../../components/ui/ScreenContainer';
+import { LoadingView } from '../../../../components/ui/LoadingView';
 import type { GameOut } from '../../../../types/api';
 
 export default function GameOverview() {
@@ -17,13 +17,13 @@ export default function GameOverview() {
     getGame(gameId).then(setGame).finally(() => setLoading(false));
   }, [gameId]);
 
-  if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#6366f1" />;
+  if (loading) return <LoadingView />;
   if (!game) return null;
 
   return (
     <>
       <Stack.Screen options={{ title: game.title }} />
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer>
         <ScrollView>
           <Text style={styles.title}>{game.title}</Text>
           {game.description ? <Text style={styles.desc}>{game.description}</Text> : null}
@@ -46,7 +46,7 @@ export default function GameOverview() {
             />
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
@@ -62,7 +62,6 @@ function ActionRow({ icon, label, onPress }: { icon: string; label: string; onPr
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   title: { fontSize: 22, fontWeight: '700', color: '#111827', padding: 20, paddingBottom: 4 },
   desc: { fontSize: 14, color: '#6b7280', paddingHorizontal: 20, marginBottom: 8 },
   actions: { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },

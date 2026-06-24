@@ -2,11 +2,11 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../../store/auth';
 import { useBattle } from '../../../hooks/useBattle';
 import { getBattle } from '../../../lib/api';
 import { Button } from '../../../components/ui/Button';
+import { ScreenContainer } from '../../../components/ui/ScreenContainer';
 import type { BattleOut } from '../../../types/api';
 
 export default function BattleScreen() {
@@ -24,19 +24,19 @@ export default function BattleScreen() {
 
   if (!connected && !state) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer style={{ backgroundColor: '#0f172a' }}>
         <ActivityIndicator size="large" color="#6366f1" style={{ flex: 1 }} />
         <Text style={styles.connectingText}>연결 중…</Text>
-      </SafeAreaView>
+      </ScreenContainer>
     );
   }
 
   if (winner) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer style={{ backgroundColor: '#0f172a' }}>
         <Text style={styles.winnerText}>{winner === 'a' ? '플레이어 A 승리!' : '플레이어 B 승리!'}</Text>
         <Button title="로비로 돌아가기" onPress={() => router.replace('/(tabs)/battle')} style={{ margin: 24 }} />
-      </SafeAreaView>
+      </ScreenContainer>
     );
   }
 
@@ -57,7 +57,7 @@ export default function BattleScreen() {
   return (
     <>
       <Stack.Screen options={{ title: '배틀', headerShown: false }} />
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer style={{ backgroundColor: '#0f172a' }}>
         {swapped && (
           <View style={styles.swapBanner}>
             <Text style={styles.swapText}>🔄 덱이 교체됐습니다!</Text>
@@ -110,13 +110,12 @@ export default function BattleScreen() {
         )}
 
         {error && <Text style={styles.errorText}>{error}</Text>}
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a' },
   connectingText: { textAlign: 'center', color: '#94a3b8', marginBottom: 40 },
   winnerText: { fontSize: 28, fontWeight: '800', color: '#fbbf24', textAlign: 'center', marginTop: 120 },
   swapBanner: { backgroundColor: '#fbbf24', padding: 10 },

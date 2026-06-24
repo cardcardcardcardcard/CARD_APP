@@ -2,9 +2,9 @@
 import { useState } from 'react';
 import { ScrollView, Text, StyleSheet, Alert, Switch, View } from 'react-native';
 import { router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
+import { ScreenContainer } from '../../../components/ui/ScreenContainer';
 import { createGame } from '../../../lib/api';
 import type { Ruleset } from '../../../types/api';
 
@@ -45,7 +45,7 @@ export default function CreateGame() {
   return (
     <>
       <Stack.Screen options={{ title: '새 게임' }} />
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer>
         <ScrollView contentContainerStyle={styles.form}>
           <Input label="제목" value={title} onChangeText={setTitle} placeholder="나만의 카드 게임" />
           <Input label="설명 (선택)" value={description} onChangeText={setDescription} multiline numberOfLines={3} />
@@ -63,13 +63,12 @@ export default function CreateGame() {
 
           <Button title="게임 생성" onPress={submit} loading={loading} style={{ marginTop: 16 }} />
         </ScrollView>
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   form: { padding: 20 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   rowLabel: { fontSize: 14, fontWeight: '500', color: '#374151' },

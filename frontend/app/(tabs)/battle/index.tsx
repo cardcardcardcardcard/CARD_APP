@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
+import { ScreenContainer } from '../../../components/ui/ScreenContainer';
+import { LoadingView } from '../../../components/ui/LoadingView';
 import { listPublicGames, listMyDecks, createBattle, getBattle, joinBattle } from '../../../lib/api';
 import type { GameOut, DeckOut } from '../../../types/api';
 
@@ -56,12 +57,12 @@ export default function BattleLobby() {
     setLoading(false);
   };
 
-  if (pageLoading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#6366f1" />;
+  if (pageLoading) return <LoadingView />;
 
   return (
     <>
       <Stack.Screen options={{ title: '배틀' }} />
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer>
         <ScrollView contentContainerStyle={styles.content}>
           {step === 'pick_game' && (
             <>
@@ -109,13 +110,12 @@ export default function BattleLobby() {
             </>
           )}
         </ScrollView>
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   content: { padding: 24 },
   heading: { fontSize: 20, fontWeight: '700', color: '#111827', marginBottom: 16 },
   sub: { fontSize: 13, color: '#6b7280', marginBottom: 12 },

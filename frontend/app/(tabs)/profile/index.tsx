@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../../store/auth';
 import { Button } from '../../../components/ui/Button';
+import { ScreenContainer } from '../../../components/ui/ScreenContainer';
 
 export default function Profile() {
   const { user, clearAuth } = useAuthStore();
@@ -13,7 +13,7 @@ export default function Profile() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenContainer style={styles.container}>
       <Text style={styles.heading}>프로필</Text>
       {user && (
         <>
@@ -22,12 +22,12 @@ export default function Profile() {
         </>
       )}
       <Button title="로그아웃" onPress={logout} variant="danger" style={{ marginTop: 24 }} />
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, backgroundColor: '#fff' },
+  container: { padding: 24 },
   heading: { fontSize: 24, fontWeight: '700', color: '#111827', marginBottom: 16 },
   name: { fontSize: 18, fontWeight: '600', color: '#374151' },
   email: { fontSize: 14, color: '#6b7280', marginTop: 4 },

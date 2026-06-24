@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { listMyDecks, getGame } from '../../../../../lib/api';
+import { ScreenContainer } from '../../../../../components/ui/ScreenContainer';
+import { LoadingView } from '../../../../../components/ui/LoadingView';
+import { EmptyState } from '../../../../../components/ui/EmptyState';
 import type { DeckOut, GameOut } from '../../../../../types/api';
 
 export default function MyDecks() {
@@ -28,8 +30,8 @@ export default function MyDecks() {
           </TouchableOpacity>
         ),
       }} />
-      <SafeAreaView style={styles.container}>
-        {loading ? <ActivityIndicator style={{ flex: 1 }} size="large" color="#6366f1" /> : (
+      <ScreenContainer>
+        {loading ? <LoadingView /> : (
           <FlatList
             data={decks}
             keyExtractor={d => d.id}
@@ -39,18 +41,16 @@ export default function MyDecks() {
                 <Text style={styles.meta}>{item.card_ids.length}/{game?.ruleset.deck_size ?? '?'} 장</Text>
               </View>
             )}
-            ListEmptyComponent={<Text style={styles.empty}>덱이 없습니다. +를 눌러 만드세요.</Text>}
+            ListEmptyComponent={<EmptyState message="덱이 없습니다. +를 눌러 만드세요." />}
           />
         )}
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   card: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
   name: { fontSize: 15, fontWeight: '500', color: '#111827' },
   meta: { fontSize: 12, color: '#6b7280', marginTop: 2 },
-  empty: { textAlign: 'center', color: '#9ca3af', marginTop: 60 },
 });

@@ -1,10 +1,11 @@
 // frontend/app/(tabs)/my-games/index.tsx
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { listMyGames } from '../../../lib/api';
+import { ScreenContainer } from '../../../components/ui/ScreenContainer';
+import { LoadingView } from '../../../components/ui/LoadingView';
 import type { GameOut } from '../../../types/api';
 
 export default function MyGames() {
@@ -20,7 +21,7 @@ export default function MyGames() {
   useEffect(() => { load(); }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenContainer>
       <View style={styles.header}>
         <Text style={styles.heading}>내 게임</Text>
         <TouchableOpacity onPress={() => router.push('/(tabs)/my-games/create')}>
@@ -28,7 +29,7 @@ export default function MyGames() {
         </TouchableOpacity>
       </View>
       {loading ? (
-        <ActivityIndicator size="large" color="#6366f1" style={{ marginTop: 40 }} />
+        <LoadingView />
       ) : (
         <FlatList
           data={games}
@@ -50,12 +51,11 @@ export default function MyGames() {
           }
         />
       )}
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, paddingBottom: 12 },
   heading: { fontSize: 24, fontWeight: '700', color: '#111827' },
   card: { marginHorizontal: 16, marginBottom: 10, padding: 16, backgroundColor: '#f9fafb', borderRadius: 10, borderWidth: 1, borderColor: '#e5e7eb' },

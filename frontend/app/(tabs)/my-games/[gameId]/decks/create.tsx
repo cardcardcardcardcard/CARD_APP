@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { listCards, getGame, createDeck } from '../../../../../lib/api';
 import { Input } from '../../../../../components/ui/Input';
 import { Button } from '../../../../../components/ui/Button';
+import { ScreenContainer } from '../../../../../components/ui/ScreenContainer';
+import { LoadingView } from '../../../../../components/ui/LoadingView';
+import { EmptyState } from '../../../../../components/ui/EmptyState';
 import type { CardOut, GameOut } from '../../../../../types/api';
 
 export default function CreateDeck() {
@@ -44,13 +46,13 @@ export default function CreateDeck() {
     }
   };
 
-  if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#6366f1" />;
+  if (loading) return <LoadingView />;
   const deckSize = game?.ruleset.deck_size ?? 20;
 
   return (
     <>
       <Stack.Screen options={{ title: '덱 빌드' }} />
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer>
         <View style={styles.header}>
           <Input label="덱 이름" value={name} onChangeText={setName} style={{ flex: 1, marginBottom: 0 }} />
           <Text style={styles.count}>{selected.length}/{deckSize}</Text>
@@ -68,18 +70,17 @@ export default function CreateDeck() {
               </TouchableOpacity>
             );
           }}
-          ListEmptyComponent={<Text style={styles.empty}>이 게임에 카드가 없습니다.</Text>}
+          ListEmptyComponent={<EmptyState message="이 게임에 카드가 없습니다." />}
         />
         <View style={styles.footer}>
           <Button title={`덱 저장 (${selected.length}/${deckSize})`} onPress={save} loading={saving} />
         </View>
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
   count: { fontSize: 16, fontWeight: '700', color: '#6366f1', paddingBottom: 8 },
   card: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
@@ -88,6 +89,5 @@ const styles = StyleSheet.create({
   nameActive: { color: '#6366f1' },
   meta: { fontSize: 12, color: '#9ca3af', marginRight: 8 },
   check: {},
-  empty: { textAlign: 'center', color: '#9ca3af', marginTop: 60 },
   footer: { padding: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
 });

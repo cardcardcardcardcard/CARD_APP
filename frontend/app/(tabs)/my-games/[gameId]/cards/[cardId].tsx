@@ -1,11 +1,12 @@
 // frontend/app/(tabs)/my-games/[gameId]/cards/[cardId].tsx
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input } from '../../../../../components/ui/Input';
 import { Button } from '../../../../../components/ui/Button';
 import { BlockBuilder } from '../../../../../components/BlockBuilder';
+import { ScreenContainer } from '../../../../../components/ui/ScreenContainer';
+import { LoadingView } from '../../../../../components/ui/LoadingView';
 import { listCards, updateCard } from '../../../../../lib/api';
 import type { CardOut, CardEffect } from '../../../../../types/api';
 
@@ -36,23 +37,22 @@ export default function EditCard() {
     }
   };
 
-  if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#6366f1" />;
+  if (loading) return <LoadingView />;
 
   return (
     <>
       <Stack.Screen options={{ title: '카드 수정' }} />
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer>
         <ScrollView contentContainerStyle={styles.form}>
           <Input label="카드 이름" value={name} onChangeText={setName} />
           <BlockBuilder effects={effects} onChange={setEffects} />
           <Button title="카드 저장" onPress={save} loading={saving} style={{ marginTop: 16 }} />
         </ScrollView>
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   form: { padding: 20 },
 });

@@ -1,10 +1,11 @@
 // frontend/app/(tabs)/my-games/[gameId]/edit.tsx
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, StyleSheet, Alert, Switch, View, ActivityIndicator } from 'react-native';
+import { ScrollView, Text, StyleSheet, Alert, Switch, View } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input } from '../../../../components/ui/Input';
 import { Button } from '../../../../components/ui/Button';
+import { ScreenContainer } from '../../../../components/ui/ScreenContainer';
+import { LoadingView } from '../../../../components/ui/LoadingView';
 import { getGame, updateGame } from '../../../../lib/api';
 import type { GameOut, Ruleset } from '../../../../types/api';
 
@@ -44,12 +45,12 @@ export default function EditGame() {
     }
   };
 
-  if (loading || !ruleset) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#6366f1" />;
+  if (loading || !ruleset) return <LoadingView />;
 
   return (
     <>
       <Stack.Screen options={{ title: '게임 수정' }} />
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer>
         <ScrollView contentContainerStyle={styles.form}>
           <Input label="제목" value={title} onChangeText={setTitle} />
           <Input label="설명" value={description} onChangeText={setDescription} multiline numberOfLines={3} />
@@ -67,13 +68,12 @@ export default function EditGame() {
 
           <Button title="변경 저장" onPress={save} loading={saving} style={{ marginTop: 16 }} />
         </ScrollView>
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   form: { padding: 20 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   rowLabel: { fontSize: 14, fontWeight: '500', color: '#374151' },

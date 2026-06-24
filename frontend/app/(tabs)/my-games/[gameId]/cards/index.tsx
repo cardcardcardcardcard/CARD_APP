@@ -1,10 +1,12 @@
 // frontend/app/(tabs)/my-games/[gameId]/cards/index.tsx
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { listCards, deleteCard } from '../../../../../lib/api';
+import { ScreenContainer } from '../../../../../components/ui/ScreenContainer';
+import { LoadingView } from '../../../../../components/ui/LoadingView';
+import { EmptyState } from '../../../../../components/ui/EmptyState';
 import type { CardOut } from '../../../../../types/api';
 
 export default function CardList() {
@@ -38,8 +40,8 @@ export default function CardList() {
           </TouchableOpacity>
         ),
       }} />
-      <SafeAreaView style={styles.container}>
-        {loading ? <ActivityIndicator style={{ flex: 1 }} size="large" color="#6366f1" /> : (
+      <ScreenContainer>
+        {loading ? <LoadingView /> : (
           <FlatList
             data={cards}
             keyExtractor={c => c.id}
@@ -54,18 +56,16 @@ export default function CardList() {
                 </TouchableOpacity>
               </TouchableOpacity>
             )}
-            ListEmptyComponent={<Text style={styles.empty}>카드가 없습니다. +를 눌러 추가하세요.</Text>}
+            ListEmptyComponent={<EmptyState message="카드가 없습니다. +를 눌러 추가하세요." />}
           />
         )}
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
   card: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
   name: { fontSize: 15, fontWeight: '500', color: '#111827' },
   meta: { fontSize: 12, color: '#6b7280', marginTop: 2 },
-  empty: { textAlign: 'center', color: '#9ca3af', marginTop: 60 },
 });
