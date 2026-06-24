@@ -1,22 +1,36 @@
-from datetime import datetime, timedelta
-import bcrypt
-from jose import jwt
-from app.config import settings
+import uuid
+from datetime import datetime
+
+from app.domain.user import UserDomain
+from app.exceptions import ConflictError, UnauthorizedError, NotFoundError
+from app.repositories.user import UserRepository
+from app.schemas.user import UserCreate, LoginRequest
+from app.security import create_access_token
 
 
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+class AuthService:
+    def __init__(self, repo: UserRepository):
+        self._repo = repo
 
+    async def register(self, body: UserCreate) -> UserDomain:
+        if await self._repo.exists_by_email_or_username(body.email, body.username):
+            raise ConflictError("Username or email already exists")
+        domain = UserDomain(
+            id=uuid.uuid4(),
+            username=body.username,
+            email=body.email,
+            created_at=datetime.utcnow(),
+        )
+        return await self._repo.add(domain, body.password)
 
-def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+    async def login(self, body: LoginRequest) -> str:
+        user = await self._repo.authenticate(body.email, body.password)
+        if not user:
+            raise UnauthorizedError("Invalid credentials")
+        return create_access_token(str(user.id))
 
-
-def create_access_token(user_id: str) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    return jwt.encode({"sub": user_id, "exp": expire}, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-
-
-def decode_access_token(token: str) -> str:
-    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-    return payload["sub"]
+    async def get_by_id(self, user_id: uuid.UUID) -> UserDomain:
+        user = await self._repo.find_by_id(user_id)
+        if not user:
+            raise NotFoundError("User")
+        return user

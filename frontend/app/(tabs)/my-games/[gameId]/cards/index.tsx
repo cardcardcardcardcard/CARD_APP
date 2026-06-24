@@ -7,7 +7,13 @@ import { listCards, deleteCard } from '../../../../../lib/api';
 import { ScreenContainer } from '../../../../../components/ui/ScreenContainer';
 import { LoadingView } from '../../../../../components/ui/LoadingView';
 import { EmptyState } from '../../../../../components/ui/EmptyState';
-import type { CardOut } from '../../../../../types/api';
+import type { CardOut, CardType } from '../../../../../types/api';
+
+const CARD_TYPE_META: Record<CardType, { label: string; color: string; bg: string }> = {
+  action: { label: '행동', color: '#0284c7', bg: '#e0f2fe' },
+  counter: { label: '카운터', color: '#16a34a', bg: '#dcfce7' },
+  trap: { label: '함정', color: '#dc2626', bg: '#fee2e2' },
+};
 
 export default function CardList() {
   const { gameId } = useLocalSearchParams<{ gameId: string }>();
@@ -49,7 +55,20 @@ export default function CardList() {
               <TouchableOpacity style={styles.card} onPress={() => router.push(`/(tabs)/my-games/${gameId}/cards/${item.id}`)}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.meta}>{item.effects.length} 효과</Text>
+                  <View style={styles.metaRow}>
+                    <View style={[styles.badge, { backgroundColor: CARD_TYPE_META[item.card_type].bg }]}>
+                      <Text style={[styles.badgeText, { color: CARD_TYPE_META[item.card_type].color }]}>
+                        {CARD_TYPE_META[item.card_type].label}
+                      </Text>
+                    </View>
+                    {item.has_minigame && <Text style={styles.minigameTag}>미니게임</Text>}
+                    {item.card_type === 'counter' && (
+                      <Text style={styles.minigameTag}>
+                        {[item.counters_action && '행동', item.counters_trap && '함정'].filter(Boolean).join('/') || '미설정'} 카운터
+                      </Text>
+                    )}
+                    {item.effect_text ? <Text style={styles.meta} numberOfLines={1}>{item.effect_text}</Text> : null}
+                  </View>
                 </View>
                 <TouchableOpacity onPress={() => remove(item)}>
                   <Ionicons name="trash-outline" size={18} color="#ef4444" />
@@ -67,5 +86,9 @@ export default function CardList() {
 const styles = StyleSheet.create({
   card: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
   name: { fontSize: 15, fontWeight: '500', color: '#111827' },
-  meta: { fontSize: 12, color: '#6b7280', marginTop: 2 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  badgeText: { fontSize: 11, fontWeight: '700' },
+  minigameTag: { fontSize: 11, color: '#9333ea', fontWeight: '600' },
+  meta: { fontSize: 12, color: '#6b7280', flex: 1 },
 });

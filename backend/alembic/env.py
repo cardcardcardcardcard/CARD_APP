@@ -12,7 +12,7 @@ from alembic import context
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.database import Base
-from app.models import User, Game, Card, Deck, Battle  # noqa: F401 — registers metadata
+from app.models import User, Game, Card, Battle  # noqa: F401 — registers metadata
 from app.config import settings
 
 # Alembic Config object

@@ -7,7 +7,7 @@ import { Button } from '../../../../components/ui/Button';
 import { ScreenContainer } from '../../../../components/ui/ScreenContainer';
 import { LoadingView } from '../../../../components/ui/LoadingView';
 import { getGame, updateGame } from '../../../../lib/api';
-import type { GameOut, Ruleset } from '../../../../types/api';
+import type { GameOut } from '../../../../types/api';
 
 export default function EditGame() {
   const { gameId } = useLocalSearchParams<{ gameId: string }>();
@@ -15,7 +15,7 @@ export default function EditGame() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(true);
-  const [ruleset, setRuleset] = useState<Ruleset | null>(null);
+  const [winHandSize, setWinHandSize] = useState('10');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -25,18 +25,19 @@ export default function EditGame() {
       setTitle(g.title);
       setDescription(g.description ?? '');
       setIsPublic(g.is_public);
-      setRuleset(g.ruleset);
+      setWinHandSize(String(g.win_hand_size));
     }).finally(() => setLoading(false));
   }, [gameId]);
 
-  const setR = <K extends keyof Ruleset>(key: K, val: Ruleset[K]) =>
-    setRuleset(r => r ? { ...r, [key]: val } : r);
-
   const save = async () => {
-    if (!ruleset) return;
     setSaving(true);
     try {
-      await updateGame(gameId, { title: title.trim(), description: description.trim() || undefined, is_public: isPublic, ruleset });
+      await updateGame(gameId, {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        is_public: isPublic,
+        win_hand_size: Number(winHandSize) || 10,
+      });
       router.back();
     } catch (e: any) {
       Alert.alert('오류', e?.response?.data?.detail ?? '저장 실패');
@@ -45,7 +46,7 @@ export default function EditGame() {
     }
   };
 
-  if (loading || !ruleset) return <LoadingView />;
+  if (loading || !game) return <LoadingView />;
 
   return (
     <>
@@ -58,13 +59,12 @@ export default function EditGame() {
             <Text style={styles.rowLabel}>공개</Text>
             <Switch value={isPublic} onValueChange={setIsPublic} trackColor={{ true: '#6366f1' }} />
           </View>
-
-          <Text style={styles.section}>룰셋</Text>
-          <Input label="덱 크기" value={String(ruleset.deck_size)} onChangeText={v => setR('deck_size', Number(v) || 20)} keyboardType="numeric" />
-          <Input label="손패 제한" value={String(ruleset.hand_limit)} onChangeText={v => setR('hand_limit', Number(v) || 5)} keyboardType="numeric" />
-          <Input label="스왑 주기 (턴)" value={String(ruleset.swap_interval)} onChangeText={v => setR('swap_interval', Number(v) || 3)} keyboardType="numeric" />
-          <Input label="초기 자원" value={String(ruleset.initial_resource)} onChangeText={v => setR('initial_resource', Number(v) || 1)} keyboardType="numeric" />
-          <Input label="턴당 자원" value={String(ruleset.resource_per_turn)} onChangeText={v => setR('resource_per_turn', Number(v) || 1)} keyboardType="numeric" />
+          <Input
+            label="승리 조건 (카드 N장 이상)"
+            value={winHandSize}
+            onChangeText={setWinHandSize}
+            keyboardType="numeric"
+          />
 
           <Button title="변경 저장" onPress={save} loading={saving} style={{ marginTop: 16 }} />
         </ScrollView>
@@ -77,5 +77,4 @@ const styles = StyleSheet.create({
   form: { padding: 20 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   rowLabel: { fontSize: 14, fontWeight: '500', color: '#374151' },
-  section: { fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 12, marginTop: 8 },
 });
